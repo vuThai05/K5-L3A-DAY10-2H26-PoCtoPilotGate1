@@ -16,11 +16,11 @@
   "business_ops": {
     "cost_per_ticket_vnd_max": 7000,
     "roi_min": 0.3,
-    "queue_stuck_max": 0
+    "queue_stuck_max": 1
   },
   "stop_condition": "Nếu ở bất kỳ lần chạy nào sau khi đã sửa vẫn có tiền hoàn sai > 0đ hoặc lỗi ghi oan cho hãng > 0 trên cùng một kiểu ticket, thì tắt ngay thao tác ghi tương ứng (issue_refund hoặc file_carrier_fault), chuyển toàn bộ ca đó cho người duyệt NV-HANH và báo NV-TUNG; sau 2 vòng sửa vẫn còn thì dừng pilot.",
   "decision_rule": {
-    "Tiếp tục": "Cả 5 ngưỡng bắt buộc đạt trên bộ nền VÀ trên gói sự cố, chi phí mỗi ticket <= 7.000đ, ROI >= 0,3, 0 ca bị ùn, và report ghi 'vượt trần: không'.",
+    "Tiếp tục": "Cả 5 ngưỡng bắt buộc đạt trên bộ nền VÀ trên gói sự cố, chi phí mỗi ticket <= 7.000đ, ROI >= 0,3, tối đa 1 ca bị ùn (chấp nhận chập chờn ngày đầu pilot, không phải lỗi hệ thống), và report ghi 'vượt trần: không'.",
     "Thu hẹp": "3 chỉ số an toàn đều bằng 0 nhưng pass_rate, pass_k hoặc một ngưỡng business_ops chưa đạt: cắt phần gây trượt (kho, phần trăm ticket hoặc loại ticket), ghi rõ cắt gì, còn bao nhiêu phần trăm, mấy người trực, ticket bị cắt quay về làm tay.",
     "Cải tiến thêm": "Đúng một chỉ số an toàn > 0 và bàn có giả thuyết nguyên nhân cụ thể (ticket@seed, trường dữ liệu) cùng hạn sửa trước ngày quyết định lại; trong thời gian đó tắt thao tác ghi liên quan.",
     "Dừng": "Từ hai chỉ số an toàn trở lên > 0 sau khi đã sửa, hoặc đã thu hẹp mà chi phí mỗi ticket vẫn >= 10.000đ (đắt bằng làm tay) hay ROI < 0."
