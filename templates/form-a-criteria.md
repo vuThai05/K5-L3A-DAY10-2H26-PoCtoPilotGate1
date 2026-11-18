@@ -20,7 +20,7 @@ rồi mới chạy đánh giá. Khối 1 không sửa code.
 
 ### Câu 1.1 · Một mục tiêu cấp hệ thống (khác "model trả lời đúng")
 
-> Trợ lý giúp LogiX xử lý yêu cầu hoàn tiền giao trễ nhanh hơn làm tay, đúng chính sách đang hiệu lực và khớp được khi đối soát với hãng vận chuyển và shop, để giữ niềm tin của khách và hãng mà không phải tăng thêm nhân sự CSKH.
+> Trợ lý chỉ trả cho khách đúng số tiền hoàn mà chính sách đang hiệu lực cho phép và khớp được khi đối soát với hãng và shop, mà không bao giờ hoàn tiền vượt quyền phê duyệt và không bao giờ để lộ dữ liệu cá nhân của khách ra ngoài LogiX.
 
 ### Câu 1.2 · Mục tiêu nhìn từ hai người
 
@@ -48,12 +48,12 @@ trợ lý có đang gây thiệt hại cho bên ngoài LogiX không; không có 
 
 | | Offline, cho MỘT bước (câu 1.3) | Telemetry production (câu 1.4) |
 |---|---|---|
-| **Bước / hành vi được đo** | | Toàn luồng ghi sổ + báo hãng, nhìn từ bên ngoài LogiX |
-| **Thước đo** (một câu, có đơn vị) | | Tỉ lệ ca trong 1 giờ mà `notify_carrier`/`file_carrier_fault` gửi đi KHÔNG có `delay_cause` khớp `policies[].fault_causes` đang hiệu lực (%) |
-| **Dữ liệu** (lấy ở đâu, bao nhiêu, ai gán nhãn) | | Sự kiện `tool` và `legal_gate` trong `events` production; không có nhãn người, dùng chính `parcels[].delay_cause` làm tín hiệu thay nhãn |
-| **Cách tính** (công thức, mẫu số, cách xử lý ca thiếu dữ liệu) | | Số lần gọi tool chia cho tổng số lần gọi tool cùng loại trong khung giờ; thiếu `delay_cause` tính là "không khớp" (an toàn hơn bỏ qua) |
+| **Bước / hành vi được đo** | Chọn phiên bản chính sách hoàn tiền trước khi tính khoản hoàn; phục vụ mục tiêu hoàn đúng chính sách và đúng hạn mức ở A1. | Toàn luồng ghi sổ + báo hãng, nhìn từ bên ngoài LogiX |
+| **Thước đo** (một câu, có đơn vị) | Tỉ lệ lần chọn sai phiên bản chính sách so với phiên bản có hiệu lực tại ngày mô phỏng (%); càng thấp càng tốt. | Tỉ lệ ca trong 1 giờ mà `notify_carrier`/`file_carrier_fault` gửi đi KHÔNG có `delay_cause` khớp `policies[].fault_causes` đang hiệu lực (%) |
+| **Dữ liệu** (lấy ở đâu, bao nhiêu, ai gán nhãn) | Thiết kế cho 22 ticket trong `data/tickets.jsonl` × 5 seed (11, 22, 33, 44, 55), tối đa 110 lần chạy sau khi ký tiêu chí. Lấy `events[type=policy].policy_id` từ `runs/<mã>/traces/<ticket>@<seed>.json`; đối chiếu `as_of` và `policies[].effective_from/effective_to` trong `data/world.json`. Hạnh phụ trách gán nhãn phiên bản đúng theo ngày hiệu lực, Mỹ đối soát; không lấy cờ `index_active` làm nhãn. | Sự kiện `tool` và `legal_gate` trong `events` production; không có nhãn người, dùng chính `parcels[].delay_cause` làm tín hiệu thay nhãn |
+| **Cách tính** (công thức, mẫu số, cách xử lý ca thiếu dữ liệu) | Phiên bản đúng có `effective_from ≤ as_of ≤ effective_to` (không có ngày kết thúc nghĩa là còn hiệu lực). Gọi N là số lần chạy có sự kiện `policy`; E là số lần trong N có `policy_id` khác nhãn đúng. Chỉ số = 100 × E/N (%). Có sự kiện nhưng thiếu `policy_id`, hoặc không xác định được duy nhất một phiên bản hiệu lực: tính lỗi và ghi riêng để soát dữ liệu. Lần không tới bước `policy` loại khỏi N, đếm riêng kèm lý do; thiếu file trace ghi là thiếu dữ liệu. N = 0 thì báo "không đủ dữ liệu", không báo 0%. | Số lần gọi tool chia cho tổng số lần gọi tool cùng loại trong khung giờ; thiếu `delay_cause` tính là "không khớp" (an toàn hơn bỏ qua) |
 | **Khung thời gian / ngưỡng báo động** | (không áp dụng) | Cửa sổ trượt 1 giờ; báo động khi > 0 ca lọt qua `legal_gate` trong giờ đó (ngưỡng an toàn = 0, vì ảnh hưởng bên thứ ba) |
-| **Điểm mù** (thước đo này KHÔNG thấy gì) | | Không thấy trường hợp `delay_cause` trong tracking tự nó bị ghi sai từ đầu |
+| **Điểm mù** (thước đo này KHÔNG thấy gì) | Không đo độ trễ, số tiền hay phê duyệt có đúng không sau khi chọn đúng phiên bản; không phát hiện nội dung chính sách nguồn bị sai. Chỉ đo các ca tới bước chọn chính sách; bộ nền tại một ngày chưa kiểm được hành vi qua ngày đổi phiên bản. | Không thấy trường hợp `delay_cause` trong tracking tự nó bị ghi sai từ đầu |
 
 **Ví dụ mẫu (bước "chọn độ trễ" của agent, đừng chép):**
 Thước đo: tỉ lệ lần chạy mà độ trễ agent dùng để tính tiền khác độ trễ theo tracking DB. Dữ liệu: sự kiện `proposal.delay_days_used`
