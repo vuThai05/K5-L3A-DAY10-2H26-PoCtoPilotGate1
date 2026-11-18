@@ -57,15 +57,17 @@ Vai: Kỹ sư cổng. `lab10/guards.py`, `lab10/monitors.py`; Phiếu A câu 1.3
 
 - Viết offline metric câu 1.3 (Phiếu A mục A2) cho bước "chọn phiên bản chính sách hoàn tiền": phát hiện agent (`lab10/agent.py` dòng 132–135) chọn chính sách bằng cờ `index_active` thay vì so ngày hiệu lực `effective_from/effective_to` — thước đo thiết kế để bắt đúng lỗ hổng này khi REFUND-v4 có hiệu lực 01/12/2026.
 - Merge các PR đầu của nhóm (#1, #7, #8) với quyền chủ repo.
+- Câu 2.6: Viết ba cổng PM1/PM4/PM5 trong `lab10/guards.py`, đọc kết quả eval/trace, kiểm hồi quy và ghi B7.1 cùng B0 dòng 2. Code tính lại quyền lợi trước hoàn tiền, kiểm căn cứ ghi lỗi hãng và dựng payload gửi hãng từ dữ kiện được phép; không xử lý riêng theo mã ticket hay seed.
 
 ### Bằng chứng
 
 - Commit `aa73375`, `11732d0` (form-a: câu 1.3); PR #14.
 - Merge commit `ef45fb7`, `fd67e51`, `c5f4b6c`.
+- Câu 2.6: run `R-base-after-20261118-171926-3d00df` đạt 110/110 lượt, không có ca mới hỏng; `python -m unittest discover -s tests` đạt 13 tests; `python -m lab10.guards` tự kiểm ba cổng OK. Chi tiết ở Phiếu B mục B7.1.
 
 ### Việc còn phải làm (chưa xong tới lúc viết file này)
 
-- Câu 2.1 (chạy mốc base, chưa có `runs/`), câu 2.2 (trace `T-002@55`), câu 2.6 (code 2–3 cổng trong `lab10/guards.py` — hiện vẫn là bản gốc `return Verdict.allow()`).
+- Đã có kết quả câu 2.1–2.2 ở Phiếu B B0–B2 và đã hoàn tất 2.6 ở B7.1. Chờ Dung hoàn tất B7.2–B7.3 và Hạnh hoàn tất B7.4 để cả bàn chốt vòng 1 với Mỹ; phần vòng 2 làm theo phân công sau khi nhận thẻ.
 
 ### Exit ticket
 
