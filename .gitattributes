@@ -1,1 +1,8 @@
 config/acceptance_criteria.json -text
+lab10/*.py text eol=lf
+lab10/MANIFEST.json text eol=lf
+lab10/TEMPLATE_HASHES.json text eol=lf
+tests/*.py text eol=lf
+data/*.json text eol=lf
+data/*.jsonl text eol=lf
+incidents/**/* text eol=lf
