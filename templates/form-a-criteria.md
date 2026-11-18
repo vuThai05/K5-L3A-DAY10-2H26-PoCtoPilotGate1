@@ -71,7 +71,16 @@ nhau chia cho số lần chạy có sự kiện `proposal`; lần chạy không 
 
 ### Câu 1.5 · Chọn MỘT kết luận và giải thích một câu
 
-Số minh hoạ trong đề (không phải số của bàn). Khoanh: **(a) · (b) · (c) · (d)**
+Số minh hoạ trong đề (không phải số của bàn): bản X có pass_rate 0,9800 (49/50 lần chạy), khoảng tin cậy 95% [0,9400; 1,0]. Bản Y có pass_rate 1,0 (50/50).
+
+**Vote của 4 người (mỗi người comment trên PR này 1 lượt: chọn a/b/c/d + 1 câu lý do, trước khi xem câu người khác):**
+
+- [ ] Lưu Thanh Mỹ — chọn: ___ · lý do: …
+- [ ] Vũ Quang Thái — chọn: ___ · lý do: …
+- [ ] Nguyễn Thị Thùy Dung — chọn: ___ · lý do: …
+- [ ] Nguyễn Thị Hồng Hạnh — chọn: ___ · lý do: …
+
+Khoanh (chốt sau khi cả 4 người đã vote trong comment, không sửa trước): **(a) · (b) · (c) · (d)**
 
 Giải thích một câu: …
 
