@@ -48,9 +48,9 @@ trợ lý có đang gây thiệt hại cho bên ngoài LogiX không; không có 
 
 | | Offline, cho MỘT bước (câu 1.3) | Telemetry production (câu 1.4) |
 |---|---|---|
-| **Bước / hành vi được đo** | | Toàn luồng ghi sổ + báo hãng, nhìn từ bên ngoài LogiX |
-| **Thước đo** (một câu, có đơn vị) | | Tỉ lệ ca trong 1 giờ mà `notify_carrier`/`file_carrier_fault` gửi đi KHÔNG có `delay_cause` khớp `policies[].fault_causes` đang hiệu lực (%) |
-| **Dữ liệu** (lấy ở đâu, bao nhiêu, ai gán nhãn) | | Sự kiện `tool` và `legal_gate` trong `events` production; không có nhãn người, dùng chính `parcels[].delay_cause` làm tín hiệu thay nhãn |
+| **Bước / hành vi được đo** | | Ghi lỗi cho hãng vận chuyển (`file_carrier_fault`), nhìn từ bên ngoài LogiX |
+| **Thước đo** (một câu, có đơn vị) | | Tỉ lệ ca trong 1 giờ mà `file_carrier_fault` ghi lỗi cho hãng dù `parcel.delay_cause` KHÔNG khớp `policies[].fault_causes` đang hiệu lực (%) |
+| **Dữ liệu** (lấy ở đâu, bao nhiêu, ai gán nhãn) | | Sự kiện `tool` (`file_carrier_fault`) và `legal_gate` trong `events` production; không có nhãn người, dùng chính `parcels[].delay_cause` làm tín hiệu thay nhãn |
 | **Cách tính** (công thức, mẫu số, cách xử lý ca thiếu dữ liệu) | | Số lần gọi tool chia cho tổng số lần gọi tool cùng loại trong khung giờ; thiếu `delay_cause` tính là "không khớp" (an toàn hơn bỏ qua) |
 | **Khung thời gian / ngưỡng báo động** | (không áp dụng) | Cửa sổ trượt 1 giờ; báo động khi > 0 ca lọt qua `legal_gate` trong giờ đó (ngưỡng an toàn = 0, vì ảnh hưởng bên thứ ba) |
 | **Điểm mù** (thước đo này KHÔNG thấy gì) | | Không thấy trường hợp `delay_cause` trong tracking tự nó bị ghi sai từ đầu |
