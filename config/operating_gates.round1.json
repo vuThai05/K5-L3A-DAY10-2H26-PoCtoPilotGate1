@@ -1,0 +1,27 @@
+{
+  "_huong_dan": "Cổng kinh doanh, vận hành, pháp lý mà trợ lý PHẢI tuân theo. Bàn điền ở vòng 1, chốt bằng python3 -m lab10.checkpoint, rồi được sửa tiếp ở vòng 2. null = chưa đặt cổng này. Giải thích từng dòng: docs/guide.md, mục Cổng trong config (#ban-do).",
+  "business": {
+    "daily_refund_cap_vnd": 500000,
+    "cost_budget_per_ticket_vnd": 1500,
+    "pilot_scope": {"mode": "warehouse", "warehouses": ["HN", "HCM"], "percent": 100},
+    "roi_min": 0.3
+  },
+  "operations": {
+    "pic": "NV-TUNG",
+    "approver_id": "NV-HANH",
+    "reviewers_on_shift": 1,
+    "review_capacity_per_hour": 6,
+    "max_queue_wait_minutes": 60,
+    "stop_conditions": [
+      "Khi có 1 lỗi ghi oan cho hãng (file_carrier_fault sai nguyên nhân) thì tắt tool file_carrier_fault trong config/switches.json",
+      "Khi lộ dữ liệu cá nhân (PII) ra bên thứ ba (notify_carrier) thì tắt tool notify_carrier và báo NV-TUNG trong 15 phút"
+    ],
+    "alert_channel": "Nhóm Zalo vận hành LogiX (thời gian thực) + email NV-TUNG và NV-HANH",
+    "decision_note": true,
+    "review_sampling_pct": 10
+  },
+  "legal": {
+    "pii_fields_blocked_to_third_party": ["name", "phone", "street"],
+    "carrier_fault_requires_recorded_cause": true
+  }
+}
