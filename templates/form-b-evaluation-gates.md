@@ -329,10 +329,10 @@ Mỗi con số kèm một câu lý do, lấy từ `data/world.json` → `ops_lim
 
 | Khoá | Giá trị bàn đặt | Lý do (một câu, có số) |
 |---|---|---|
-| `business.daily_refund_cap_vnd` | | |
-| `business.cost_budget_per_ticket_vnd` | | |
-| `business.pilot_scope` (all / warehouse / percent) | | |
-| `business.roi_min` | | |
+| `business.daily_refund_cap_vnd` | 500000 | Ngày hoàn tự động cao nhất ở run base là 155.000đ (B1); trần 500.000đ chịu được lượng việc tăng gấp ba mà vẫn chỉ bằng 1/4 ngân sách Finance 2.000.000đ/ngày (`ops_limits.daily_auto_refund_budget_vnd`); khoản vượt trần chuyển NV-HANH duyệt, không mất. |
+| `business.cost_budget_per_ticket_vnd` | 1500 | Bằng trần Ops và Finance đã thống nhất (`ops_limits.max_llm_cost_per_ticket_vnd` = 1.500đ); ticket tốn tiền máy nhiều nhất ở run base là 670đ nên trần này không chặn ticket hợp lệ, chỉ đẩy ticket quá dài (hơn khoảng 3.000 ký tự) sang người làm. |
+| `business.pilot_scope` (all / warehouse / percent) | warehouse: `["HN", "HCM"]`, 100% | Đề chạy thử ở 2 depot. Chọn HN (9 đơn, nhiều nhất) và HCM (5 đơn), bỏ DN (7 đơn) và CT (4 đơn) vì là vùng bão lũ: từ 01/12 REFUND-v4 bỏ `FORCE_MAJEURE` khỏi `fault_causes`, nên luật ghi lỗi hãng ở hai kho này sắp đổi. Bỏ HCM-B2B vì đơn ≥ 2 triệu, vượt xa hạn mức tự động. Nếu ở mốc prepared HCM vẫn hỏng thì B8 thu hẹp còn HN. Ticket ngoài phạm vi vẫn làm tay. |
+| `business.roi_min` | 0.3 | Khớp `roi_min` đã ký: làm tay tốn 10.000đ/ticket (`ops_facts.manual_cost_per_ticket_vnd`), ROI 0,3 nghĩa là chi phí trợ lý (máy + duyệt 10.000đ/ca + phí giữ chỗ 30.000đ/người/ca) tối đa khoảng 7.700đ/ticket; base đang 4.203đ, ROI 1,34, nên còn đệm khi thu hẹp phạm vi làm phí giữ chỗ chia cho ít ticket hơn. |
 
 ### B7.5 · Câu 2.10 · Cổng con người, vận hành, pháp lý + Runbook phần 1–3
 
