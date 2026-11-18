@@ -233,6 +233,15 @@ Phiếu C mục C1 (bút khác màu).*
 
 **Đề bài (đọc to):** *"Ba tháng sau pilot, LogiX phải tắt trợ lý hoàn tiền ở cả hai depot. Chuyện gì đã xảy ra?"*
 
+**Làm qua PR này (4 người, mỗi người comment 1 lượt, viết 2 lý do — trước khi đọc comment người khác, đúng tinh thần "im lặng trước"):**
+
+- [ ] Lưu Thanh Mỹ
+- [ ] Vũ Quang Thái
+- [ ] Nguyễn Thị Thùy Dung
+- [ ] Nguyễn Thị Hồng Hạnh
+
+Sau khi đủ 4 comment, cả bàn đọc vòng tròn (bước 2), xếp lăng kính (bước 3), chọn 2–3 lý do thành cổng (bước 4) — rồi điền bảng dưới và merge.
+
 1. **2 phút, im lặng:** mỗi người viết 2 lý do, mỗi lý do một dòng.
 2. **2 phút:** đọc vòng tròn, mỗi lượt một lý do, không bình luận. Gộp lý do trùng.
 3. **2 phút:** xếp từng lý do vào một **lăng kính**. Lăng kính nào còn trống thì cả bàn viết thêm ít nhất một lý do cho nó.
