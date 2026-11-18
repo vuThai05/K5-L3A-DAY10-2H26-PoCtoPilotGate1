@@ -20,7 +20,7 @@ rồi mới chạy đánh giá. Khối 1 không sửa code.
 
 ### Câu 1.1 · Một mục tiêu cấp hệ thống (khác "model trả lời đúng")
 
-> …
+> Mỗi yêu cầu hoàn tiền giao trễ được xử lý xong trong ngày với đúng số tiền theo chính sách đang hiệu lực (hiện là REFUND-v3) và khớp được khi đối soát với hãng và shop. Trợ lý chỉ tự ghi tiền hoặc ghi lỗi hãng khi có bằng chứng trong tracking; ca nào vượt hạn mức (200.000đ) hoặc chưa chắc thì tới tay người duyệt trong 60 phút thay vì tự quyết.
 
 ### Câu 1.2 · Mục tiêu nhìn từ hai người
 
