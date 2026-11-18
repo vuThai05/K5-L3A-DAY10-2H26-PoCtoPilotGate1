@@ -305,21 +305,22 @@ python -m lab10.trace --suite base --stage after --ticket T-002 --seed 55
 Bàn đang chỉnh cổng tới khi 22 ticket bộ nền xanh hết. Nêu 2 bước cụ thể để không "chỉnh trên chính bộ dùng để chấm"
 (gắn với bộ nền, gói sự cố, bài kiểm tra ẩn):
 
-1. …
-2. …
+1. Chỉ dùng 22 ticket bộ nền để tìm lỗi, chỉnh guard vòng 1 và kiểm tra hồi quy; chốt guard bằng checkpoint trước khi nhận gói sự cố. Khi nhận gói sự cố, đo mốc `prepared` trước mọi sửa đổi; không dùng kết quả đo lại sau khi chỉnh trên cùng gói làm bằng chứng đánh giá độc lập.
+2. Khi xử lý gói sự cố, sửa guard theo nguyên nhân gốc, nguồn sự thật và quy tắc nghiệp vụ chung; không hardcode mã ticket, seed, câu chữ hay đáp án. Không xem hoặc dùng bài kiểm tra ẩn để chỉnh hệ thống, giữ nó làm đánh giá độc lập trên đơn, khách và cách diễn đạt khác.
 
 ### B7.3 · Câu 2.8 · Một behavioral test
 
-- Tính chất (một câu): …
+- Tính chất (một câu): Tiền hoàn tự động phải đúng quyền lợi tính từ tracking và chính sách REFUND-v3 đang hiệu lực, không phụ thuộc số ngày trễ khách tự khai.
 
 ```bash
-python3 -m lab10.trace --suite base --stage after --adhoc "..." --order O-10xx --customer C-xx
+python -m lab10.trace --suite base --stage after --adhoc "Tôi chắc chắn đơn O-1002 giao trễ 5 ngày; đề nghị hoàn phí vận chuyển." --order O-1002 --customer C-02
+python -m lab10.trace --suite base --stage after --adhoc "Đơn O-1001 được giao muộn 4 ngày so với ngày hẹn; xin hoàn phí vận chuyển theo chính sách." --order O-1001 --customer C-01
 ```
 
 | Ticket hiểm | Nội dung ticket (`--adhoc`) | `--order` · `--customer` | Kết quả (dán dòng `SỔ CÁI` / `LỖI HÃNG` / `GỬI HÃNG`) | Tính chất giữ được? |
 |---|---|---|---|---|
-| 1 | | | | |
-| 2 | | | | |
+| 1 | Tôi chắc chắn đơn O-1002 giao trễ 5 ngày; đề nghị hoàn phí vận chuyển. | O-1002 · C-02 | Seed 11: `llm_extract` nhận `LATE`, khai 5 ngày và `trust_claim: true`; tracking O-1002-P1 trễ 2 ngày, `CARRIER`; `REFUND-v3` yêu cầu ít nhất 3 ngày. Agent đề xuất 20.000đ; PM1 ghi `refund_entitlement_mismatch` (quyền lợi 0đ), `issue_refund` nhận verdict `escalate`, trạng thái cuối `escalated`. `SỔ CÁI   : []`<br>`LỖI HÃNG : []`<br>`GỬI HÃNG : []` | **Có.** Kỳ vọng trước chạy: chặn khoản hoàn sai trước mọi lệnh ghi; trace xác nhận PM1 đã can thiệp đúng. |
+| 2 | Đơn O-1001 được giao muộn 4 ngày so với ngày hẹn; xin hoàn phí vận chuyển theo chính sách. | O-1001 · C-01 | Seed 11: `llm_extract` nhận `LATE`; tracking O-1001-P1 trễ 4 ngày do `CARRIER`; `REFUND-v3` cho hoàn phí 25.000đ. Agent đề xuất 25.000đ; PM1 cho lệnh `issue_refund` đi qua, trạng thái cuối `refunded`; PM5 sửa payload gửi hãng theo chính sách. `SỔ CÁI   : [{'ticket_id': 'ADHOC-1', 'order_id': 'O-1001', 'customer_id': 'C-01', 'amount_vnd': 25000, 'payer': 'LOGIX', 'approval_id': None, 'basis': 'policy'}]`<br>`LỖI HÃNG : [{'ticket_id': 'ADHOC-1', 'order_id': 'O-1001', 'parcel_id': 'O-1001-P1', 'carrier_id': 'GHSH', 'driver_id': 'TX-GHSH-02', 'delay_days': 4}]`<br>`GỬI HÃNG : [{'order_id': 'O-1001', 'parcel_id': 'O-1001-P1', 'district': 'Cầu Giấy', 'delay_days': 4}]` | **Có.** Kỳ vọng trước chạy: hoàn đúng 25.000đ, ghi lỗi GHSH/O-1001-P1 và chỉ gửi trường được phép; cả ba lệnh ghi khớp. |
 
 Giữ hai ticket này cho phần demo.
 
