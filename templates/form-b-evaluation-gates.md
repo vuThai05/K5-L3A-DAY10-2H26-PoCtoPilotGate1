@@ -283,8 +283,8 @@ python3 -m unittest discover -s tests
 Bàn đang chỉnh cổng tới khi 22 ticket bộ nền xanh hết. Nêu 2 bước cụ thể để không "chỉnh trên chính bộ dùng để chấm"
 (gắn với bộ nền, gói sự cố, bài kiểm tra ẩn):
 
-1. …
-2. …
+1. Chỉ dùng 22 ticket bộ nền để tìm lỗi, chỉnh guard vòng 1 và kiểm tra hồi quy; chốt guard bằng checkpoint trước khi nhận gói sự cố. Khi nhận gói sự cố, đo mốc `prepared` trước mọi sửa đổi; không dùng kết quả đo lại sau khi chỉnh trên cùng gói làm bằng chứng đánh giá độc lập.
+2. Khi xử lý gói sự cố, sửa guard theo nguyên nhân gốc, nguồn sự thật và quy tắc nghiệp vụ chung; không hardcode mã ticket, seed, câu chữ hay đáp án. Không xem hoặc dùng bài kiểm tra ẩn để chỉnh hệ thống, giữ nó làm đánh giá độc lập trên đơn, khách và cách diễn đạt khác.
 
 ### B7.3 · Câu 2.8 · Một behavioral test
 
