@@ -6,3 +6,10 @@ tests/*.py text eol=lf
 data/*.json text eol=lf
 data/*.jsonl text eol=lf
 incidents/**/* text eol=lf
+
+# Các file tự khoá (hash tự tham chiếu trong .lock) - giữ đúng bytes
+# đã có lúc chốt/ký, không ép chuẩn hoá line-ending nào cả.
+lab10/guards_round1.py -text
+config/operating_gates.round1.json -text
+config/round1.lock -text
+config/acceptance_criteria.lock -text
