@@ -391,6 +391,8 @@ Lượng ticket có thể dồn gấp ba trong một giờ (ngày sale, sau bão
 
 **Đính chính cơ chế kiểm mẫu (`review_sampling_pct`):** không phải "chưa có cơ chế chạy" như note trước — `lab10/ops.py` hàm `recheck_plan` **có áp dụng** tỉ lệ 10% vào mô phỏng hàng chờ (report đã in "nhân viên kiểm lại 10% quyết định tự động"). Nhãn `"trust": "không áp dụng"` chỉ vì `data/world.json → staff_behavior.recheck_auto_decisions_pct = 0` (baseline giả định nhân viên chưa tự kiểm thêm tay), không phải vì `operating_gates.json` thiếu cấu hình — không cần sửa gì ở đây.
 
+**Bổ sung sau sự cố S4 (bút khác màu, câu 3.1 phần riêng của thẻ):** Giờ cao điểm thật trên thẻ S4 (ticket gấp 3, `R-S4-before-20261119-002308-5dc727`) cho thấy nguy cơ **không chỉ ở hàng chờ người duyệt** (vẫn 0 ca ùn — PM3 đã đoán đúng và cổng vòng 1 đỡ được phần này) mà còn ở **một nhánh kỹ thuật PM3 chưa nhắc tới**: khi ticket dồn, LLM bị `429` dồn theo, agent rơi `fail_open` và có thể ghi oan lỗi hãng / hoàn tiền không đủ điều kiện (xem Phiếu C mục C2, C4). Ngưỡng cần thêm: **nếu `monitors.fail_open_carrier_fault_rate` > 0 trong một ca thì NV-TUNG phải xem lại toàn bộ ticket `fail_open` trong ca đó trước khi đối soát cuối ngày** — chưa có ngưỡng này trước sự cố.
+
 ---
 
 <a id="b8"></a>

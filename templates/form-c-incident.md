@@ -76,33 +76,34 @@ python3 -m lab10.trace --suite Sx --ticket <ID> --seed 11
 Ba loại lỗi: **giới hạn của hệ thống** · **lỗi ngữ cảnh** · **lỗi chìm** (cả người dùng lẫn hệ thống đều không nhận ra; nguy hiểm nhất,
 người chịu hại thường là bên thứ ba). Định nghĩa đầy đủ và ví dụ: Phiếu B mục B2.
 
-**Tác hại của thẻ:** cho ai `____` · đo bằng gì `____` · bao nhiêu ở mốc base `____`
+**Tác hại của thẻ:** cho ai `khách hàng (nhận tiền không đủ điều kiện) và hãng vận chuyển (bị ghi oan lỗi giao trễ)` · đo bằng gì `wrongful_refund_vnd, wrongful_carrier_faults` · bao nhiêu ở mốc base `160.000đ hoàn sai · 27 lỗi hãng oan (khối "visible" của report S4)`
 
 ### Phần 1 · Ghi lỗi (bằng chứng là mã ticket@seed và dòng trace, không tả chung chung)
 
 | # | Lỗi: người ta thấy gì (dán dòng trace / sổ cái) | Ai gặp, ai chịu | Hệ trọng (thấp / cao) | Loại lỗi (giới hạn hệ thống / ngữ cảnh / chìm) |
 |---|---|---|---|---|
-| 1 | | | | |
-| 2 | | | | |
-| 3 | | | | |
+| 1 | `S4-08@11`: trace 02 `tracking` ghi `delay:4, cause: MERCHANT_HANDOVER`; trace 04-05 `llm_error` ×2 (429); trace 06 `llm_fallback` (`fail_open`); trace 07 `proposal.do_fault: true`; trace 09 `file_carrier_fault` ghi VNX. Nhãn `faults: []`. | Hãng VNX/tài xế TX-VNX-02 bị quy oan lỗi; khách C-09 vẫn được hoàn đúng 24.000đ (không sai phần tiền) | Cao | **Chìm** — khách thấy "được hoàn, ổn", hệ thống báo `refunded` bình thường; chỉ hãng đối soát mới phát hiện bị ghi lỗi không đúng |
+| 2 | `S4-30@22`: trace 02 `tracking` ghi `delay:2, cause: MERCHANT_HANDOVER` (2 ngày — **dưới** `REFUND-v3.late.min_days_fee=3`, nhãn `status: denied`); trace 04-06 cùng `fail_open`; trace 07 `do_fault: true`, hoàn 18.000đ; trace 09 ghi lỗi hãng DNB. | Khách C-07 nhận tiền không đủ điều kiện; hãng DNB bị ghi oan; LogiX mất tiền không thu lại được | Cao | **Giới hạn hệ thống** — nhánh dự phòng (`fail_open`) không có logic so ngưỡng `min_days_fee`, một giới hạn có sẵn trong thiết kế, không phải do dữ liệu nhiễu |
 
 ### Phần 2 · Tìm nguồn (đánh dấu câu nào đúng với từng lỗi)
 
-| Câu hỏi | Lỗi 1 | Lỗi 2 | Lỗi 3 |
-|---|---|---|---|
-| **Đầu vào:** hệ thống có tự diễn giải / sửa đầu vào của người dùng theo cách họ không lường? Có đặt sai trọng số cho một lời nói hay tín hiệu của người dùng? | | | |
-| **Độ liên quan:** hệ thống có thiếu dữ liệu cần để quyết đúng? Dữ liệu vào có nhiễu, thiếu ổn định? | | | |
-| **Thứ bậc hệ thống:** có hai hệ thống cùng ghi / cùng theo dõi một thứ mà không rõ bên nào là chủ (ví dụ CSKH hoàn tay và trợ lý cùng ghi sổ)? | | | |
-| **Trạng thái hỏng:** nhiều lỗi cộng lại có làm tính năng không dùng được (ví dụ LLM lỗi liên tiếp)? | | | |
+| Câu hỏi | Lỗi 1 (`S4-08`) | Lỗi 2 (`S4-30`) |
+|---|---|---|
+| **Đầu vào:** hệ thống có tự diễn giải / sửa đầu vào của người dùng theo cách họ không lường? | Không — `claimed_delay_days: null`, `trust_claim: false`; khách không tự khai số ngày | Không — tương tự, khách chỉ hỏi chung, không khai số |
+| **Độ liên quan:** hệ thống có thiếu dữ liệu cần để quyết đúng? | **Có, nhưng khác kiểu:** dữ liệu đã đủ trong tracking (`cause`, `delay`) nhưng nhánh `fail_open` **không đọc lại** để xác nhận `cause` hợp lệ trước khi ghi lỗi hãng | **Có, nghiêm trọng hơn:** dữ liệu đã đủ để biết `delay=2 < min_days_fee=3` (không đủ điều kiện hoàn), nhưng `fail_open` bỏ qua luôn bước so ngưỡng |
+| **Thứ bậc hệ thống:** hai hệ thống cùng ghi mà không rõ ai là chủ? | Không có bằng chứng | Không có bằng chứng |
+| **Trạng thái hỏng:** nhiều lỗi cộng lại làm tính năng không dùng được? | **Có** — 2 lần `429` liên tiếp kích hoạt `fail_open`, tắt hẳn bước kiểm chính sách | **Có** — cùng cơ chế, hậu quả nặng hơn vì bỏ qua cả điều kiện hoàn tối thiểu |
 
 ### Phần 3 · Hướng xử lý (mỗi lỗi một ô)
 
-| | Lỗi 1 | Lỗi 2 | Lỗi 3 |
-|---|---|---|---|
-| Vì sao người gặp coi đây là lỗi | | | |
-| Kiểu giải pháp: phản hồi cho người dùng / trao quyền kiểm soát cho người / khác | | | |
-| Đường đi của người sau khi có giải pháp (ví dụ: ticket chuyển sang người duyệt → duyệt → khách được trả lời) | | | |
-| Hệ thống học được gì (tín hiệu ghi lại để theo dõi: tên metric trong `monitors.py`) | | | |
+| | Lỗi 1 (`S4-08`) | Lỗi 2 (`S4-30`) |
+|---|---|---|
+| Vì sao người gặp coi đây là lỗi | Hãng bị quy trách nhiệm dù tracking ghi nguyên nhân khác (`MERCHANT_HANDOVER`), ảnh hưởng đối soát và có thể bị phạt/đình chỉ oan | Khách nhận tiền không đủ điều kiện (2 ngày < 3 ngày hạn), LogiX mất tiền không thu lại được, hãng cũng bị ghi oan |
+| Kiểu giải pháp: phản hồi cho người dùng / trao quyền kiểm soát cho người / khác | Trao quyền cho người: khi rơi `fail_open`, chuyển ticket cho người duyệt đối soát tracking trước khi ghi lỗi hãng, không tự quyết | Trao quyền cho người, giống lỗi 1 — `fail_open` không nên tự ý ghi sổ/ghi lỗi khi chưa xác nhận lại ngưỡng |
+| Đường đi của người sau khi có giải pháp | `fail_open` → chuyển người duyệt (chị Hạnh) → đối soát tracking/chính sách → quyết lại (hoàn hay không, ghi lỗi hãng hay không) | Tương tự: chuyển người duyệt → kiểm `min_days_fee` bằng tay → từ chối hoàn nếu chưa đủ điều kiện |
+| Hệ thống học được gì (tín hiệu theo dõi: tên metric trong `monitors.py`) | `fail_open_carrier_fault_rate` (đã thêm, câu 3.6) — bắt đúng tổ hợp `fail_open` + `file_carrier_fault` | Cùng metric `fail_open_carrier_fault_rate`; có thể mở rộng thêm sau để tách riêng trường hợp hoàn dưới ngưỡng |
+
+Yêu cầu: ≥2 lỗi nguồn khác nhau (lỗi 1: thiếu xác nhận `cause`; lỗi 2: thiếu so ngưỡng `min_days_fee` — cùng gốc `fail_open` nhưng biểu hiện/mức độ khác) — đủ 1 lỗi chìm (lỗi 1).
 
 Yêu cầu: ít nhất **hai lỗi có nguồn khác nhau** ở phần 2, và ít nhất một lỗi được xếp đúng là **lỗi chìm**.
 
