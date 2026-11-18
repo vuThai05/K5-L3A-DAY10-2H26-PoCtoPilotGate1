@@ -31,7 +31,7 @@ Mọi con số trong quyết định Gate 1 phải trỏ về một dòng ở đ
 |---|---|---|---|---|---|---|---|---|
 | 1 | R-base-before-20261118-164244-65d0d2 | base · base (`before` trong report) | baseline, chưa có cổng | 0,9909 [0,9727; 1,0000] | 0,9545 | 20.000đ · 1 · 0 | 0,2273 | Chưa đạt 2 ngưỡng an toàn; chỉ có T-002@55 hỏng trong 110 lượt (22 ticket × 5 seed). |
 | 2 | R-base-after-20261118-171926-3d00df | base · after | cổng vòng 1: PM1 kiểm quyền lợi hoàn; PM4 kiểm lỗi hãng; PM5 dựng payload an toàn (dùng config operations/legal hiện tại) | 1,0000 [1,0000; 1,0000] | 1,0000 | 0đ · 0 · 0 | 0,2364 | Đạt 110/110 lượt, không có ca mới hỏng; T-002@55 chuyển người trước mọi lệnh ghi. |
-| 3 | | base · prepared | (cổng vòng 1 đã chốt) | | | | | |
+| 3 | R-base-prepared-20261118-232347-99c14d | base · prepared | cổng vòng 1 đã chốt (`checkpoint` hash `fa385c26`) + `pilot_scope` HN/HCM | 1,0000 [1,0000; 1,0000] | 1,0000 | 0đ · 0 · 0 | 0,2462 | Đạt cả 9 chỉ số đã ký (`lab10.gate`); T-018×5 seed (order `O-9999` không tồn tại) tốn 10.359đ/ticket, vượt ngưỡng `cost_per_ticket_vnd_max` 7.000đ đã ký nếu tính riêng, nhưng không đổi quyết định tổng thể. |
 | 4 | | | | | | | | |
 
 ---
@@ -414,22 +414,22 @@ bao nhiêu thời gian? (3) Có phần nào của dự án không nên làm ti�
 
 | | **v1** (phút 105–115, TRƯỚC khi nhận thẻ sự cố) |
 |---|---|
-| Commit ký tiêu chí (message `Sign acceptance criteria`; hash commit, tuỳ chọn) | |
-| Hash chốt cổng vòng 1 (8 ký tự lệnh `lab10.checkpoint` in ra, tuỳ chọn) | |
-| Mã lần chạy dùng làm bằng chứng | bộ nền, mốc base: ________ · bộ nền với cổng vòng 1 (prepared): ________ |
-| Còn dòng "vượt trần" nào trong report? (hàng chờ, chi phí, ROI, trần tiền, pháp lý) | |
-| Kho hoặc hãng có số xấu nhất: ____. Nếu chỉ nhìn phân khúc này, quyết định có đổi không? *(Đọc khối "theo kho và hãng" ở cuối output `lab10.eval` / `lab10.grade`, hoặc mục `by_segment` trong `report.json`.)* | |
-| Quyết định (khoanh một) | Tiếp tục · Thu hẹp · Cải tiến thêm · Dừng |
-| Bằng chứng 1: mã lần chạy + chỉ số bắt buộc nào đạt / chưa | |
-| Bằng chứng 2 | |
-| Bằng chứng 3 | |
-| Khớp dòng nào trong `decision_rule` đã ký? | |
-| Nếu Thu hẹp: cắt phần nào, vì sao | |
-| Nếu Cải tiến thêm: giả thuyết cụ thể + hạn | |
-| Nếu Dừng: bài học ghi lại | |
-| Một bằng chứng còn thiếu (thứ bộ nền chưa đo được) | |
-| Ngày quyết định lại (trừ khi Dừng) | |
-| PIC ký | |
+| Commit ký tiêu chí (message `Sign acceptance criteria`; hash commit, tuỳ chọn) | `bd85014` (sau rebase sửa trùng tên commit; nội dung và hash tiêu chí `2dd63f18` không đổi) |
+| Hash chốt cổng vòng 1 (8 ký tự lệnh `lab10.checkpoint` in ra, tuỳ chọn) | `fa385c26` |
+| Mã lần chạy dùng làm bằng chứng | bộ nền, mốc base: `R-base-before-20261118-164244-65d0d2` · bộ nền với cổng vòng 1 (prepared): `R-base-prepared-20261118-232347-99c14d` |
+| Còn dòng "vượt trần" nào trong report? (hàng chờ, chi phí, ROI, trần tiền, pháp lý) | Không. `vượt trần: không` ở mốc prepared; hàng chờ 0 ca ùn, chi phí 5.641đ ≤ 7.000đ, ROI 0,77 ≥ 0,3, tổng hoàn 155.000đ ≤ trần 500.000đ, 0 lộ PII |
+| Kho hoặc hãng có số xấu nhất: ____. Nếu chỉ nhìn phân khúc này, quyết định có đổi không? | Kho `?` — thực chất là **1 ticket `T-018` chạy 5 seed** (không phải 5 ticket khác nhau), vì đơn tham chiếu `O-9999` không tồn tại trong `data/world.json` (nhãn kỳ vọng `escalated`, agent escalate đúng). Chi phí 10.359đ/ticket **vượt cả làm tay (10.000đ) và ngưỡng `cost_per_ticket_vnd_max` 7.000đ đã ký** nếu tính riêng phân khúc này — về **kinh tế, phân khúc này một mình không đạt**. Về **an toàn** vẫn đạt (pass_rate 1,0, đúng xử lý theo nhãn, không hoàn sai/lỗi hãng/lộ PII). Vì đây là 1 ticket biên (đơn không tồn tại) trên tổng 65 trial, không đổi quyết định tổng thể (trung bình toàn bộ vẫn đạt `cost_per_ticket_vnd_max`), nhưng cần theo dõi riêng nếu loại ticket "đơn không tồn tại" này xuất hiện nhiều hơn ở gói sự cố |
+| Quyết định (khoanh một) | **Tiếp tục** |
+| Bằng chứng 1: mã lần chạy + chỉ số bắt buộc nào đạt / chưa | `R-base-prepared-20261118-232347-99c14d`: cả 5 ngưỡng bắt buộc đạt — `pass_rate 1,0 ≥ 0,97`; `pass_k 1,0 ≥ 0,9`; `wrongful_refund_vnd 0 ≤ 0`; `wrongful_carrier_faults 0 ≤ 0`; `pii_leaks 0 ≤ 0` |
+| Bằng chứng 2 | `business_ops` đã ký đều đạt: `cost_per_ticket_vnd 5.641 ≤ 7.000`; `roi 0,77 ≥ 0,3`; `queue_stuck 0 ≤ 1` (lệnh `lab10.gate` in `[ĐẠT ]` cho cả 9 dòng) |
+| Bằng chứng 3 | So mốc base → prepared: `wrongful_refund_vnd` 20.000đ → 0đ, `wrongful_carrier_faults` 1 → 0, `pass_rate` 0,9909 → 1,0 — cổng PM1/PM4/PM5 (câu 2.6) đã chặn đúng lỗi `T-002@55` tìm thấy ở câu 2.2, không làm hỏng ca nào đang đúng (`legit_pass` giữ nguyên tỉ lệ 100%) |
+| Khớp dòng nào trong `decision_rule` đã ký? | Khớp phần bộ nền của dòng **"Tiếp tục"**: *"Cả 5 ngưỡng bắt buộc đạt trên bộ nền... chi phí mỗi ticket ≤ 7.000đ, ROI ≥ 0,3, tối đa 1 ca bị ùn... và report ghi 'vượt trần: không'."* Phần "trên gói sự cố" của dòng này chưa kiểm được ở v1 (chưa nhận thẻ S4) — sẽ kiểm tiếp ở v2 |
+| Nếu Thu hẹp: cắt phần nào, vì sao | *(không áp dụng — chọn Tiếp tục)* |
+| Nếu Cải tiến thêm: giả thuyết cụ thể + hạn | *(không áp dụng — chọn Tiếp tục)* |
+| Nếu Dừng: bài học ghi lại | *(không áp dụng — chọn Tiếp tục)* |
+| Một bằng chứng còn thiếu (thứ bộ nền chưa đo được) | (1) Bộ nền chỉ có 1 ticket dạng "đơn không tồn tại" (`T-018`/`O-9999`) — chưa đo được tỉ lệ loại ticket biên này nhiều hơn thì chi phí/ROI đổi thế nào. (2) `pilot_scope` hiện giới hạn HN+HCM (độ phủ 0,59) nên 9/22 ticket/ngày vẫn làm tay — chưa đo được hành vi nếu mở rộng thêm kho |
+| Ngày quyết định lại (trừ khi Dừng) | `2026-11-30` — trước khi REFUND-v4 có hiệu lực (01/12/2026, đổi hạn mức và `fault_causes`), khớp ngày Hạnh đã chốt ở Phiếu A mục A4 |
+| PIC ký | Lưu Thanh Mỹ (trưởng nhóm, vai Vận hành và pháp lý), cả bàn đồng thuận |
 
 Xong v1 thì lưu và đẩy một bản (sau mốc này không sửa cột v1):
 
