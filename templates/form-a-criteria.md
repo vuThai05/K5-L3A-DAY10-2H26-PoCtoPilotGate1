@@ -20,7 +20,7 @@ rồi mới chạy đánh giá. Khối 1 không sửa code.
 
 ### Câu 1.1 · Một mục tiêu cấp hệ thống (khác "model trả lời đúng")
 
-> …
+> Trợ lý giúp LogiX xử lý yêu cầu hoàn tiền giao trễ nhanh hơn làm tay, đúng chính sách đang hiệu lực và khớp được khi đối soát với hãng vận chuyển và shop, để giữ niềm tin của khách và hãng mà không phải tăng thêm nhân sự CSKH.
 
 ### Câu 1.2 · Mục tiêu nhìn từ hai người
 
