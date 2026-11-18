@@ -20,12 +20,12 @@ rồi mới chạy đánh giá. Khối 1 không sửa code.
 
 ### Câu 1.1 · Một mục tiêu cấp hệ thống (khác "model trả lời đúng")
 
-> …
+> Trợ lý giúp LogiX xử lý yêu cầu hoàn tiền giao trễ nhanh hơn làm tay, đúng chính sách đang hiệu lực và khớp được khi đối soát với hãng vận chuyển và shop, để giữ niềm tin của khách và hãng mà không phải tăng thêm nhân sự CSKH.
 
 ### Câu 1.2 · Mục tiêu nhìn từ hai người
 
-- Chị Oanh, kế toán đối soát (không dùng trợ lý, nhưng phải khớp sổ với hãng và shop mỗi tuần): mọi dòng `issue_refund` và `file_carrier_fault` trợ lý ghi phải có căn cứ tra lại được (chính sách áp dụng, nguyên nhân trễ trong tracking) để sổ cái khớp với hãng và shop mỗi tuần, không có khoản "không rõ vì sao có".
-- Chị Hạnh, trưởng ca CSKH (phải duyệt những ca trợ lý chuyển sang): ca chuyển lên chị phải có đủ thông tin (độ trễ, chính sách, số tiền đề xuất, lý do chuyển) để chị quyết trong SLA 60 phút (`ops_limits.review_sla_minutes`), không phải tự tra lại từ đầu.
+- Chị Oanh, kế toán đối soát (không dùng trợ lý, nhưng phải khớp sổ với hãng và shop mỗi tuần): vì eval set của trợ lý còn nhỏ và có ca chỉ sai ở 1/5 seed (PRD §6 — chưa chắc ổn định), sổ cái cần đánh dấu rõ claim nào trợ lý **tự quyết trong phạm vi** (PRD §2) để chị biết nhóm nào cần đối soát kỹ hơn, không gộp chung với claim đã qua người duyệt.
+- Chị Hạnh, trưởng ca CSKH (phải duyệt những ca trợ lý chuyển sang): mọi claim **ngoài phạm vi** (PRD §2: gộp nhiều đơn, tranh chấp cần xác minh pháp lý, uỷ quyền xử lý thay) phải tự động chuyển `escalated` kèm lý do rõ ràng trong SLA 60 phút (`ops_limits.review_sla_minutes`), để chị không phải tự suy luận lại ca nào đáng ngờ do hệ thống chưa kiểm định đủ (PRD §6).
 
 ---
 
