@@ -71,7 +71,24 @@ nhau chia cho số lần chạy có sự kiện `proposal`; lần chạy không 
 
 ### Câu 1.5 · Chọn MỘT kết luận và giải thích một câu
 
-Số minh hoạ trong đề (không phải số của bàn). Khoanh: **(a) · (b) · (c) · (d)**
+Số minh hoạ trong đề (không phải số của bàn): bản X có pass_rate 0,9800 (49/50 lần chạy), khoảng tin cậy 95% [0,9400; 1,0]. Bản Y có pass_rate 1,0 (50/50).
+
+> **Trích dẫn nguyên văn đề (`problem-set.md`, câu 1.5):**
+> "Đọc kết quả sau rồi chọn MỘT kết luận đúng và giải thích một câu. **Các số dưới đây là số minh hoạ**, không phải số của bộ nền lab (bàn sẽ tự đo số thật ở câu 2.1, sau khi đã ký): bản X có pass_rate 0,9800 (49/50 lần chạy), khoảng tin cậy 95% [0,9400; 1,0]. Bản Y có pass_rate 1,0 (50/50). (a) Y tốt hơn X có ý nghĩa thống kê. (b) Chưa đủ căn cứ nói Y tốt hơn X; chênh 1 lần chạy nằm trong khoảng tin cậy của X. (c) X và Y chắc chắn như nhau. (d) Phải chạy thêm seed thì X mới đạt."
+>
+> **Ghi chú đi kèm (`problem-set.md`, ngay dưới bảng câu hỏi):**
+> "Ghi chú 1.5: các số 0,9800, [0,9400; 1,0] và 50 lần chạy là **số minh hoạ**, tính khoảng tin cậy cùng cách lệnh `lab10.eval` dùng (bootstrap 1.000 mẫu). Chúng cố ý khác số thật của mốc base trên bộ nền. Bàn sẽ tự chạy và đọc số thật ở câu 2.1, sau khi đã ký."
+>
+> **Cách tính khoảng tin cậy thật (trích `lab10/eval.py`, hàm `bootstrap_ci`, dòng 140–148):** bốc lại có hoàn lại từ tỉ lệ đúng của từng ticket, lặp 1.000 lần, lấy giá trị ở vị trí 2,5% và 97,5% của 1.000 kết quả làm 2 đầu khoảng.
+
+**Vote của 4 người (mỗi người comment trên PR này 1 lượt: chọn a/b/c/d + 1 câu lý do, trước khi xem câu người khác):**
+
+- [ ] Lưu Thanh Mỹ — chọn: ___ · lý do: …
+- [ ] Vũ Quang Thái — chọn: ___ · lý do: …
+- [ ] Nguyễn Thị Thùy Dung — chọn: ___ · lý do: …
+- [ ] Nguyễn Thị Hồng Hạnh — chọn: ___ · lý do: …
+
+Khoanh (chốt sau khi cả 4 người đã vote trong comment, không sửa trước): **(a) · (b) · (c) · (d)**
 
 Giải thích một câu: …
 
