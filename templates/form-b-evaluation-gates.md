@@ -207,15 +207,15 @@ Trạng thái: **Xong** (có bằng chứng) · **Chưa** · **Không áp dụng
 
 | # | Nhóm việc | Bằng chứng lấy từ đâu (đã có sẵn trong lab) | Mục cần kiểm tra | Trạng thái | Bằng chứng | PIC |
 |---|---|---|---|---|---|---|
-| 1 | Chất lượng | Report `lab10.eval` (mã lần chạy) + bảng soát lỗi (Phiếu B mục B2) | | | | Vũ Quang Thái |
-| 2 | Dữ liệu | Bản đồ dữ liệu (Phiếu B mục B3, câu 2.3): trường nào là nguồn sự thật, trường nào là bản sao | | | | Nguyễn Thị Hồng Hạnh |
-| 3 | Bảo mật | Một vòng HAZOP với guideword PERTURBED (Phiếu B mục B4): chữ nào đi vào model mà không do LogiX viết | | | | Lưu Thanh Mỹ |
-| 4 | Quyền hạn | `config/switches.json` + guard trước lệnh ghi; thẻ S2, S8 có thêm mục mức kiểm soát (Phiếu C mục C3) | | | | Nguyễn Thị Thùy Dung |
-| 5 | Hiệu năng, hạ tầng | Đội tự ước tính; HAZOP guideword INCAPABLE: LLM không trả lời thì sao; số người duyệt và số ca mỗi giờ | | | | Vũ Quang Thái |
-| 6 | Chi phí | Khối "kinh doanh và vận hành" của report: chi phí mỗi ticket so với làm tay, ROI, tiền LLM ticket đắt nhất; `config/operating_gates.json` mục `business` | | | | Nguyễn Thị Hồng Hạnh |
-| 7 | Vận hành | Runbook (Phiếu B mục B7.5–B7.6) + `config/operating_gates.json` mục `operations` (PIC, người duyệt, số người trực, điều kiện dừng, kênh báo tin) + metric trong `monitors.py` | | | | Lưu Thanh Mỹ |
-| 8 | Con người, pháp lý | Bên thứ ba (hãng, tài xế, shop, người nhận quà, người đứng tên duyệt); `config/operating_gates.json` mục `legal`; thẻ S6, S7, S8 có mục riêng ở Phiếu C mục C3 | | | | Lưu Thanh Mỹ |
-| 9 | Quyết định | Câu tiêu chí (Phiếu A mục A4) + hash Bản tiêu chí đã ký + quyết định Gate 1 (Phiếu B mục B8, Phiếu C mục C12) | | | | Lưu Thanh Mỹ (cả bàn chốt) |
+| 1 | Chất lượng | Report `lab10.eval` (mã lần chạy) + bảng soát lỗi (Phiếu B mục B2) | Xong | Mã lần chạy `R-base-before-20261118-164244-65d0d2`; bảng soát lỗi `T-002@55` ở mục B2 | Vũ Quang Thái |
+| 2 | Dữ liệu | Bản đồ dữ liệu (Phiếu B mục B3, câu 2.3): trường nào là nguồn sự thật, trường nào là bản sao | Xong | Phiếu B mục B3 (PR #22) | Nguyễn Thị Hồng Hạnh |
+| 3 | Bảo mật | Một vòng HAZOP với guideword PERTURBED (Phiếu B mục B4): chữ nào đi vào model mà không do LogiX viết | Xong | Phiếu B mục B4, dòng PERTURBED (`notify_carrier`, đơn `is_gift`) | Lưu Thanh Mỹ |
+| 4 | Quyền hạn | `config/switches.json` + guard trước lệnh ghi; thẻ S2, S8 có thêm mục mức kiểm soát (Phiếu C mục C3) | Chưa | `lab10/guards.py` vẫn bản gốc (`pre_guard`/`write_gate` đều `return Verdict.allow()`), chưa có cổng nào | Nguyễn Thị Thùy Dung |
+| 5 | Hiệu năng, hạ tầng | Đội tự ước tính; HAZOP guideword INCAPABLE: LLM không trả lời thì sao; số người duyệt và số ca mỗi giờ | Xong | Phiếu B mục B4 dòng INCAPABLE + Runbook 1 (B7.5): 1 người trực, 6 ca/giờ | Vũ Quang Thái |
+| 6 | Chi phí | Khối "kinh doanh và vận hành" của report: chi phí mỗi ticket so với làm tay, ROI, tiền LLM ticket đắt nhất; `config/operating_gates.json` mục `business` | Chưa | Report đã có số thật (4.203đ/ticket, ROI 1,34, mã lần chạy ở dòng 1) nhưng `operating_gates.json` mục `business` vẫn `null` hết — chưa đặt ngưỡng | Nguyễn Thị Hồng Hạnh |
+| 7 | Vận hành | Runbook (Phiếu B mục B7.5–B7.6) + `config/operating_gates.json` mục `operations` (PIC, người duyệt, số người trực, điều kiện dừng, kênh báo tin) + metric trong `monitors.py` | Xong | `operating_gates.json` mục `operations` (PR #7); runbook B7.5–B7.6; `lab10/monitors.py` có `escalation_rate` | Lưu Thanh Mỹ |
+| 8 | Con người, pháp lý | Bên thứ ba (hãng, tài xế, shop, người nhận quà, người đứng tên duyệt); `config/operating_gates.json` mục `legal`; thẻ S6, S7, S8 có mục riêng ở Phiếu C mục C3 | Xong | `operating_gates.json` mục `legal` (PR #7, #18): chặn PII, bắt buộc recorded cause | Lưu Thanh Mỹ |
+| 9 | Quyết định | Câu tiêu chí (Phiếu A mục A4) + hash Bản tiêu chí đã ký + quyết định Gate 1 (Phiếu B mục B8, Phiếu C mục C12) | Chưa | Tiêu chí đã ký (`acceptance_criteria.lock`, PR #18) nhưng quyết định v1 (Phiếu B mục B8) chưa viết | Lưu Thanh Mỹ (cả bàn chốt) |
 
 Ô "Chưa" có rủi ro cao → chuyển thành một dòng Risk register (Phiếu C mục C10).
 
