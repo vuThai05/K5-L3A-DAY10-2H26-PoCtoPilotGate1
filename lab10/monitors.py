@@ -20,20 +20,27 @@ def escalation_rate(trials):
 
 
 def fail_open_carrier_fault_rate(trials):
-    """Thước đo: tỉ lệ trial mà LLM nghẽn (agent rơi vào `fail_open`) NHƯNG
-    trợ lý vẫn ghi lỗi cho hãng vận chuyển (`file_carrier_fault`).
+    """Thước đo: tỉ lệ trial mà LLM nghẽn (agent rơi vào `fail_open`) VÀ trợ lý
+    **đã ghi thành công** lỗi cho hãng vận chuyển (`file_carrier_fault`) — một
+    tổ hợp hành vi đáng kiểm lại tay, KHÔNG phải tự nó là "ghi oan". Trong các
+    ca này, một phần nguyên nhân thật đúng là hãng (ĐẠT), một phần không
+    (HỎNG) — monitor chỉ khoanh vùng ca cần đối soát, không tự phân biệt đúng/sai.
     Dữ liệu: sự kiện {"type": "proposal", "basis": "fail_open"} và
-    {"type": "tool", "tool": "file_carrier_fault"} trong `events`; không cần nhãn
-    (đúng/sai), chỉ cần 2 sự kiện này cùng xuất hiện trong một trial.
-    Cách tính: số trial có cả 2 sự kiện / tổng số trial. Sự cố S4 (giờ cao điểm,
-    LLM bị 429 dồn) cho thấy nhánh fail_open gán cứng do_fault=True, không kiểm
-    lại nguyên nhân thật trong tracking trước khi ghi lỗi hãng.
-    Điểm mù: không thấy trường hợp fail_open xảy ra nhưng KHÔNG ghi lỗi hãng
-    (ví dụ ticket không có tool file_carrier_fault vì lý do khác).
+    {"type": "tool", "tool": "file_carrier_fault"} trong `events`. Sự kiện
+    "tool" chỉ xuất hiện SAU KHI lệnh ghi đã qua guard và thành công — monitor
+    KHÔNG thấy các lần `write_gate` đã `deny`/`escalate` trước khi ghi.
+    Cách tính: số trial có cả 2 sự kiện / tổng số trial được truyền vào (cửa sổ
+    thời gian/ca do bên gọi `trials` quyết định, hàm này không tự lọc theo ca
+    480 phút). Trial thiếu `events` (lỗi chạy) dùng `.get("events", [])` để
+    không văng lỗi, tính là không khớp (an toàn hơn báo nhầm là có sự cố).
+    Điểm mù: không thấy ca `fail_open` mà KHÔNG ghi lỗi hãng; không tự biết ca
+    ghi lỗi hãng có đúng hãng hay bị ghi oan — phải đối chiếu `faults` (nhãn)
+    hoặc đọc trace mới biết được.
     """
     def hit(t):
-        has_fail_open = any(e.get("type") == "proposal" and e.get("basis") == "fail_open" for e in t["events"])
-        has_carrier_fault = any(e.get("type") == "tool" and e.get("tool") == "file_carrier_fault" for e in t["events"])
+        events = t.get("events", [])
+        has_fail_open = any(e.get("type") == "proposal" and e.get("basis") == "fail_open" for e in events)
+        has_carrier_fault = any(e.get("type") == "tool" and e.get("tool") == "file_carrier_fault" for e in events)
         return has_fail_open and has_carrier_fault
     return sum(hit(t) for t in trials) / max(1, len(trials))
 

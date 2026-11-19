@@ -47,14 +47,14 @@ Chạy **trước khi sửa bất cứ thứ gì**:
 python3 -m lab10.grade --incident Sx
 ```
 
-- Mã lần chạy grade: `R-S4-grade-20261119-001513-5dc727` · base: `R-S4-before-20261119-001514-5dc727` · prepared: `R-S4-prepared-20261119-001514-5dc727`
+- Mã lần chạy grade: `R-S4-grade-20261119-103944-ee1496` · base: `R-S4-before-20261119-103944-ee1496` · prepared: `R-S4-prepared-20261119-103944-ee1496`
 - Cổng vòng 1 đỡ được ô / con số nào (so cột base với cột prepared): trên khối **"visible"** (gói sự cố), `pass_rate` 0,8683 → 1,0; `wrongful_refund_vnd` 160.000đ → 0đ; `wrongful_carrier_faults` 27 → 0. Cổng PM1 (quyền lợi hoàn tiền) và PM4 (lỗi hãng) tự xử lý sạch toàn bộ ticket còn **trong phạm vi pilot** (`HN`, `HCM`).
-- Khối kinh doanh và vận hành còn dòng nào vượt trần: Report tự động in "Không vượt trần" — nhưng đây là **vượt trần ẩn**: `business.daily_refund_cap_vnd` (500.000đ, đặt ở vòng 1) **cao hơn** mức Finance chốt riêng cho ngày sale 11.11 (`world_patch.json`: 300.000đ). Ở base (chưa cổng), tổng hoàn trên gói S4 đã 466.000đ — thật ra đã vượt mức 300k của ngày đó, report không báo vì so với cổng chung (500k) chứ không biết mức riêng theo ngày. Ở prepared hiện tại (292.000đ) tình cờ vẫn dưới cả 2 mức nên chưa lộ rõ — xem HAZOP dòng 4 (C4) và fault tree [4] (C6). Riêng độ phủ pilot giảm còn 0,561 (so 1,0 ở base) vì `pilot_scope` loại kho DN/CT — lý do ticket `S4-08` (kho DN) không được đo trực tiếp ở mốc prepared/after.
+- Khối kinh doanh và vận hành còn dòng nào vượt trần: *(sửa theo góp ý Thái — report thật sự ĐÃ biết đúng mức riêng ngày sale)* Mốc **base**, `ops.violations` in rõ: `["hàng chờ: 4 ca bị ùn (chờ quá 60 phút)", "tổng hoàn tự động một ngày 466.000đ > ngân sách 300.000đ"]` — `lab10/ops.py` đọc đúng `ops_limits.daily_auto_refund_budget_vnd` (300k, override riêng cho suite S4 trong `world_patch.json`), không phải so với cổng chung 500k. Mốc **prepared**: `violations = []` (292.000đ, dưới cả 300k và 500k) — nhưng đây là **report phát hiện ĐÚNG sau khi đã xảy ra** (lớp đo/giám sát), còn **cổng chặn lúc ghi** (`write_gate`/`tools.issue_refund`) vẫn chỉ so với `business.daily_refund_cap_vnd = 500.000đ` tĩnh, chưa đọc `ops_limits()` (300k) để chặn SỚM hơn nếu lượng ticket cao hơn — đây mới là lỗ hổng thật, không phải report "không biết". Xem HAZOP dòng 4 (C4). Riêng độ phủ pilot giảm còn 0,561 (so 1,0 ở base) vì `pilot_scope` loại kho DN/CT — lý do ticket `S4-08` (kho DN) không nằm trong tập trial ở mốc prepared/after (đã xác nhận: `run_suite` loại hẳn ticket ngoài phạm vi trước khi tạo trial, không chỉ "không được agent xử lý").
 
 **Mở lại pre-mortem (Phiếu B mục B6), viết bằng bút khác màu.** Với thẻ S1, S3, S4, S5 đây là một phần của phần riêng theo thẻ.
 
 - Sự cố trên thẻ thuộc lăng kính nào (kỹ thuật, kinh doanh, con người và vận hành, pháp lý)? **Cả hai**: phần "hàng chờ ngập, cần thêm người" thuộc lăng kính **con người và vận hành**; phần "LLM nghẽn thì trợ lý duyệt nhiều hơn, ghi lỗi hãng sai" thuộc lăng kính **kỹ thuật**.
-- Có nằm trong các lý do bàn đã viết không? **PM3** (Phiếu B mục B6, do Thái viết ở vòng 1) đã đúng y phần hàng chờ: *"Ticket chuyển người và ca kiểm mẫu đã dồn vào giờ cao điểm, vượt công suất trực; khách đã chờ quá SLA"* — cổng vòng 1 đỡ được phần vận hành (runbook B7.6, `operations.reviewers_on_shift`), report S4 cho thấy `queue_stuck = 0` ở cả 2 mốc (không ùn thật trên gói hiển thị). **Nhưng phần kỹ thuật (LLM nghẽn → ghi sai lỗi hãng) KHÔNG nằm trong pre-mortem vòng 1** — cả bàn không nghĩ tới nhánh `fail_open` cụ thể này.
+- Có nằm trong các lý do bàn đã viết không? **PM3** (Phiếu B mục B6, do Thái viết ở vòng 1) đã đúng y triệu chứng trên thẻ: *"Ticket chuyển người và ca kiểm mẫu đã dồn vào giờ cao điểm, vượt công suất trực; khách đã chờ quá SLA"*. *(Sửa theo góp ý Thái, phân biệt rõ triệu chứng ↔ mô phỏng)* — mô phỏng xác nhận đúng ở mốc **base**: `queue_stuck = 4 ca`, nằm thẳng trong `ops.violations`. Ở mốc **prepared**, `queue_stuck = 0` — nhưng **chưa đủ bằng chứng nói cổng vòng 1 (PM1/PM4/PM5, vốn không đụng gì tới hàng chờ) đã "xử lý" được tình trạng ùn**; nhiều khả năng do `pilot_scope` giảm số ticket agent phải xử lý (độ phủ 1,0 → 0,561), chứ không phải runbook B7.6 hay `operations.reviewers_on_shift` (không đổi gì giữa 2 mốc) thực sự can thiệp. Cần làm rõ ở C7/C9 trước khi ghi "PM3 đã được đỡ". **Phần kỹ thuật (LLM nghẽn → ghi sai lỗi hãng) KHÔNG nằm trong pre-mortem vòng 1** — cả bàn không nghĩ tới nhánh `fail_open` cụ thể này.
 - Lý do còn thiếu, thêm bây giờ:
 
 | Lý do thất bại (viết ở thì quá khứ) | Lăng kính | Kiểm được bằng gì (trace / data / config nào) |
@@ -83,27 +83,27 @@ người chịu hại thường là bên thứ ba). Định nghĩa đầy đủ 
 | # | Lỗi: người ta thấy gì (dán dòng trace / sổ cái) | Ai gặp, ai chịu | Hệ trọng (thấp / cao) | Loại lỗi (giới hạn hệ thống / ngữ cảnh / chìm) |
 |---|---|---|---|---|
 | 1 | `S4-08@11`: trace 02 `tracking` ghi `delay:4, cause: MERCHANT_HANDOVER`; trace 04-05 `llm_error` ×2 (429); trace 06 `llm_fallback` (`fail_open`); trace 07 `proposal.do_fault: true`; trace 09 `file_carrier_fault` ghi VNX. Nhãn `faults: []`. | Hãng VNX/tài xế TX-VNX-02 bị quy oan lỗi; khách C-09 vẫn được hoàn đúng 24.000đ (không sai phần tiền) | Cao | **Chìm** — khách thấy "được hoàn, ổn", hệ thống báo `refunded` bình thường; chỉ hãng đối soát mới phát hiện bị ghi lỗi không đúng |
-| 2 | `S4-30@22`: trace 02 `tracking` ghi `delay:2, cause: MERCHANT_HANDOVER` (2 ngày — **dưới** `REFUND-v3.late.min_days_fee=3`, nhãn `status: denied`); trace 04-06 cùng `fail_open`; trace 07 `do_fault: true`, hoàn 18.000đ; trace 09 ghi lỗi hãng DNB. | Khách C-07 nhận tiền không đủ điều kiện; hãng DNB bị ghi oan; LogiX mất tiền không thu lại được | Cao | **Giới hạn hệ thống** — nhánh dự phòng (`fail_open`) không có logic so ngưỡng `min_days_fee`, một giới hạn có sẵn trong thiết kế, không phải do dữ liệu nhiễu |
+| 2 | `S4-26@11` *(đổi từ `S4-30`, cùng Thái: nguồn phải khác hẳn, không chỉ khác biểu hiện của cùng `fail_open`)*: ticket "chưa nhận kiện nào, nghi thất lạc" → `llm_extract.intent: NOT_RECEIVED` → đúng thiết kế, `escalated` ngay (nhãn khớp, nội dung **ĐẠT**). Nhưng ticket này tới phút 278/480 của ca, `queue_wait_min: 62` — **vượt SLA 60 phút** (`ops_limits.review_sla_minutes`), nằm trong 4 ca `queue_stuck` ở `ops.violations` của mốc base. | Khách C-xx chờ quá SLA mới được chuyển người (nội dung xử lý đúng, nhưng vận hành chậm); 1 người trực không kịp 6 ca/giờ lúc ticket dồn | Cao | **Giới hạn của hệ thống** — không phải lỗi nội dung (agent quyết đúng), mà là giới hạn công suất vốn có (1 người × 6 ca/giờ) khi lượng ticket vượt ngưỡng; nguồn khác hẳn `fail_open` của lỗi 1 |
 
 ### Phần 2 · Tìm nguồn (đánh dấu câu nào đúng với từng lỗi)
 
-| Câu hỏi | Lỗi 1 (`S4-08`) | Lỗi 2 (`S4-30`) |
+| Câu hỏi | Lỗi 1 (`S4-08`) | Lỗi 2 (`S4-26`) |
 |---|---|---|
-| **Đầu vào:** hệ thống có tự diễn giải / sửa đầu vào của người dùng theo cách họ không lường? | Không — `claimed_delay_days: null`, `trust_claim: false`; khách không tự khai số ngày | Không — tương tự, khách chỉ hỏi chung, không khai số |
-| **Độ liên quan:** hệ thống có thiếu dữ liệu cần để quyết đúng? | **Có, nhưng khác kiểu:** dữ liệu đã đủ trong tracking (`cause`, `delay`) nhưng nhánh `fail_open` **không đọc lại** để xác nhận `cause` hợp lệ trước khi ghi lỗi hãng | **Có, nghiêm trọng hơn:** dữ liệu đã đủ để biết `delay=2 < min_days_fee=3` (không đủ điều kiện hoàn), nhưng `fail_open` bỏ qua luôn bước so ngưỡng |
+| **Đầu vào:** hệ thống có tự diễn giải / sửa đầu vào của người dùng theo cách họ không lường? | Không — `claimed_delay_days: null`, `trust_claim: false`; khách không tự khai số ngày | Không — ticket "nghi thất lạc" được phân loại `NOT_RECEIVED` đúng, không liên quan diễn giải sai |
+| **Độ liên quan:** hệ thống có thiếu dữ liệu cần để quyết đúng? | **Có, nhưng khác kiểu:** dữ liệu đã đủ trong tracking (`cause`, `delay`) nhưng nhánh `fail_open` **không đọc lại** để xác nhận `cause` hợp lệ trước khi ghi lỗi hãng | Không — nội dung quyết định (`escalated`) đúng hoàn toàn, không thiếu dữ liệu nào |
 | **Thứ bậc hệ thống:** hai hệ thống cùng ghi mà không rõ ai là chủ? | Không có bằng chứng | Không có bằng chứng |
-| **Trạng thái hỏng:** nhiều lỗi cộng lại làm tính năng không dùng được? | **Có** — 2 lần `429` liên tiếp kích hoạt `fail_open`, tắt hẳn bước kiểm chính sách | **Có** — cùng cơ chế, hậu quả nặng hơn vì bỏ qua cả điều kiện hoàn tối thiểu |
+| **Trạng thái hỏng:** nhiều lỗi cộng lại làm tính năng không dùng được? | **Có** — 2 lần `429` liên tiếp kích hoạt `fail_open`, tắt hẳn bước kiểm chính sách | **Có, nhưng khác tầng:** không phải lỗi mô hình — **công suất người duyệt (1 người × 6 ca/giờ) không đủ** khi ticket dồn tới phút 278, làm ca thứ 62 phút mới tới lượt |
 
 ### Phần 3 · Hướng xử lý (mỗi lỗi một ô)
 
-| | Lỗi 1 (`S4-08`) | Lỗi 2 (`S4-30`) |
+| | Lỗi 1 (`S4-08`) | Lỗi 2 (`S4-26`) |
 |---|---|---|
-| Vì sao người gặp coi đây là lỗi | Hãng bị quy trách nhiệm dù tracking ghi nguyên nhân khác (`MERCHANT_HANDOVER`), ảnh hưởng đối soát và có thể bị phạt/đình chỉ oan | Khách nhận tiền không đủ điều kiện (2 ngày < 3 ngày hạn), LogiX mất tiền không thu lại được, hãng cũng bị ghi oan |
-| Kiểu giải pháp: phản hồi cho người dùng / trao quyền kiểm soát cho người / khác | Trao quyền cho người: khi rơi `fail_open`, chuyển ticket cho người duyệt đối soát tracking trước khi ghi lỗi hãng, không tự quyết | Trao quyền cho người, giống lỗi 1 — `fail_open` không nên tự ý ghi sổ/ghi lỗi khi chưa xác nhận lại ngưỡng |
-| Đường đi của người sau khi có giải pháp | `fail_open` → chuyển người duyệt (chị Hạnh) → đối soát tracking/chính sách → quyết lại (hoàn hay không, ghi lỗi hãng hay không) | Tương tự: chuyển người duyệt → kiểm `min_days_fee` bằng tay → từ chối hoàn nếu chưa đủ điều kiện |
-| Hệ thống học được gì (tín hiệu theo dõi: tên metric trong `monitors.py`) | `fail_open_carrier_fault_rate` (đã thêm, câu 3.6) — bắt đúng tổ hợp `fail_open` + `file_carrier_fault` | Cùng metric `fail_open_carrier_fault_rate`; có thể mở rộng thêm sau để tách riêng trường hợp hoàn dưới ngưỡng |
+| Vì sao người gặp coi đây là lỗi | Hãng bị quy trách nhiệm dù tracking ghi nguyên nhân khác (`MERCHANT_HANDOVER`), ảnh hưởng đối soát và có thể bị phạt/đình chỉ oan | Khách phải chờ vượt SLA đã hứa (60 phút) mới được xử lý, dù nội dung xử lý sau đó đúng — vi phạm cam kết vận hành, không phải lỗi nội dung |
+| Kiểu giải pháp: phản hồi cho người dùng / trao quyền kiểm soát cho người / khác | Trao quyền cho người: khi rơi `fail_open`, chuyển ticket cho người duyệt đối soát tracking trước khi ghi lỗi hãng, không tự quyết | Khác: tăng công suất tạm thời (gọi thêm người, runbook Giờ cao điểm B7.6) hoặc thu hẹp phạm vi lúc tải cao, không phải lỗi logic cần sửa code |
+| Đường đi của người sau khi có giải pháp | `fail_open` → chuyển người duyệt (chị Hạnh) → đối soát tracking/chính sách → quyết lại (hoàn hay không, ghi lỗi hãng hay không) | Ticket vẫn vào hàng chờ như cũ; khi gần/quá ngưỡng SLA thì NV-TUNG gọi thêm người (runbook B7.6) hoặc thu hẹp phạm vi tạm thời |
+| Hệ thống học được gì (tín hiệu theo dõi: tên metric trong `monitors.py`) | `fail_open_carrier_fault_rate` (đã thêm, câu 3.6) — bắt đúng tổ hợp `fail_open` + `file_carrier_fault` | Tín hiệu có sẵn: `queue_wait_min`/`queue_stuck` trong report (`ops.violations`) — chưa có monitor riêng, có thể thêm sau nếu cần cảnh báo sớm hơn ngưỡng SLA |
 
-Yêu cầu: ≥2 lỗi nguồn khác nhau (lỗi 1: thiếu xác nhận `cause`; lỗi 2: thiếu so ngưỡng `min_days_fee` — cùng gốc `fail_open` nhưng biểu hiện/mức độ khác) — đủ 1 lỗi chìm (lỗi 1).
+Yêu cầu: ≥2 lỗi nguồn khác nhau — lỗi 1 (`S4-08`) gốc ở **model/tracking** (`fail_open` bỏ qua xác nhận `cause`); lỗi 2 (`S4-26`) gốc ở **công suất vận hành** (1 người × 6 ca/giờ không đủ), hoàn toàn khác tầng, không chung cơ chế `fail_open` — đủ 1 lỗi chìm (lỗi 1).
 
 Yêu cầu: ít nhất **hai lỗi có nguồn khác nhau** ở phần 2, và ít nhất một lỗi được xếp đúng là **lỗi chìm**.
 
@@ -236,7 +236,7 @@ Tool chọn phân tích: `issue_refund` + `file_carrier_fault` (qua đường LL
 
 | Tham số / dòng dữ liệu | Guideword (WRONG / INVALID / INCOMPLETE / PERTURBED / INCAPABLE) | Lệch cụ thể (mã ticket, trường dữ liệu của thẻ) | Hậu quả, cho ai | Hiện có gì ngăn? | Gate đề xuất + tầng |
 |---|---|---|---|---|---|
-| Kết quả `llm.policy_check` | **INCAPABLE** | Giờ cao điểm (ticket gấp 3, thẻ S4) → LLM trả `429` 2 lần liên tiếp → agent rơi `fail_open`, gán cứng `do_fault=True` (`S4-08@seed11,55`) dù tracking ghi `delay_cause: MERCHANT_HANDOVER` | Hãng VNX bị ghi oan lỗi, khách được hoàn 24.000đ không đúng điều kiện | `pre_guard`/`write_gate` hiện có PM4 kiểm `carrier_at_fault` — **nhưng chưa kiểm chứng được** vì ticket này (kho DN) đã bị `pilot_scope` loại trước khi tới agent | Thêm test trực tiếp PM4 trên ticket trong phạm vi (HN/HCM) có `fail_open`; không dựa vào `pilot_scope` để "né" — tầng **chặn** (đã có, cần verify) |
+| Kết quả `llm.policy_check` | **INCAPABLE** | Giờ cao điểm (ticket gấp 3, thẻ S4) → LLM trả `429` 2 lần liên tiếp → agent rơi `fail_open`, gán cứng `do_fault=True` (`S4-08@seed11,55`) dù tracking ghi `delay_cause: MERCHANT_HANDOVER` | *(sửa theo góp ý Thái, khớp với C2)* Hãng VNX/tài xế bị ghi oan lỗi giao trễ (`faults` nhãn kỳ vọng `[]`) — **số tiền hoàn 24.000đ vẫn đúng** (nhãn `refund_vnd: 24000` khớp), chỉ riêng việc ghi lỗi hãng là oan | `pre_guard`/`write_gate` hiện có PM4 kiểm `carrier_at_fault` — **nhưng chưa kiểm chứng được** vì ticket này (kho DN) đã bị `pilot_scope` loại trước khi tới agent | Thêm test trực tiếp PM4 trên ticket trong phạm vi (HN/HCM) có `fail_open`; không dựa vào `pilot_scope` để "né" — tầng **chặn** (đã có, cần verify) |
 | `review_sampling`/hàng chờ người duyệt | **INCAPABLE** | 1 người trực × 6 ca/giờ, ticket gấp 3 → PM3 (pre-mortem vòng 1) đã đoán đúng nguy cơ ùn | Chị Hạnh quá tải, khách chờ quá SLA 60 phút | `operations.reviewers_on_shift`, runbook Giờ cao điểm (B7.6) đã có ngưỡng gọi thêm người | Giữ nguyên, bổ sung ngưỡng cụ thể vào B7.6 (xem C3) — tầng **vận hành** |
 | Tỉ lệ `fail_open` theo giờ | **WRONG** *(nhánh bàn chưa thấy trên trace lúc viết — chỉ lộ ra khi so sánh nhiều seed)* | Trước câu 3.6, không có chỉ số nào tách riêng ca `fail_open`; report chỉ gộp chung vào `escalation_rate`, không phân biệt được "khách chủ động được chuyển người" với "máy đang gặp lỗi 429" | Vận hành không biết LLM đang nghẽn bao nhiêu % cho tới khi hoàn/lỗi hãng sai đã xảy ra | Không có gì trước câu 3.6 | `monitors.fail_open_carrier_fault_rate` (đã thêm, câu 3.6) — tầng **phát hiện** |
 | `business.daily_refund_cap_vnd` | **INVALID** *(con số vòng 1 không còn đúng cho ngày này — phát hiện khi soát lại PR, chưa ai nói tới trước)* | `incidents/S4/world_patch.json → ops_limits.daily_auto_refund_budget_vnd = 300.000đ` — Finance chốt **riêng cho ngày 11.11 (sale)**, THẤP HƠN mức chung `business.daily_refund_cap_vnd = 500.000đ` nhóm đặt ở câu 2.9 (vòng 1, trước khi biết thẻ). Ở mốc base (chưa cổng), tổng hoàn tự động trên gói S4 đã lên **466.000đ** — vượt xa mức 300.000đ thật của ngày đó | Nếu lượng ticket nhích thêm (ví dụ còn 310.000–499.000đ), cổng hiện tại **không chặn** vì vẫn dưới 500k, trong khi đúng ra phải chuyển người duyệt từ 300k. Ở mốc `prepared` hiện tại tổng chỉ 292.000đ — **dưới cả 2 mức, nên trùng hợp chưa lộ**, không phải vì cổng đã kiểm đúng số | Cổng đọc hằng số cứng `operating_gates.json`, không đọc được mức override theo ngày trong `world_patch.json` của gói sự cố | Sửa `daily_refund_cap_vnd` xuống 300.000đ cho đúng ngày sale, hoặc đọc `ops_limits` của gói đang chạy thay vì số cứng — tầng **chặn** (chưa có, cần làm ở câu 3.5) |
@@ -279,22 +279,27 @@ thường biến một nhánh HOẶC thành VÀ: tác hại chỉ còn xảy ra 
 
 Ít nhất hai nhánh ở hai tầng khác nhau (kỹ thuật, kinh doanh, con người); mỗi lá có bằng chứng (ticket@seed, trường dữ liệu, hoặc một dòng của report).
 
+*(Vẽ lại theo góp ý Thái: "chưa kiểm chứng PM4" và "thiếu monitor" là khoảng trống bằng chứng/giám sát, không phải nguyên nhân trực tiếp — không đặt ngang hàng HOẶC với nguyên nhân kỹ thuật. Cấu trúc đúng: tác hại chỉ xảy ra khi quyết định ghi SAI **VÀ** lớp chặn tương ứng không chặn được.)*
+
 ```
 [ĐỈNH] Tác hại: hãng vận chuyển (VNX) bị ghi oan lỗi giao trễ (cho ai: hãng VNX/tài xế, đo bằng: wrongful_carrier_faults)
- └─ HOẶC
- ├─ [1] LLM bị 429 dồn ở giờ cao điểm → fail_open → do_fault gán cứng True    tầng: đầu vào / model
- │ └─ vì: nhánh fail_open không tra lại delay_cause thật    bằng chứng: ticket S4-08@seed 11 (và 55)
- ├─ [2] Guard PM4 chưa được kiểm chứng trên ticket thật đi qua agent    tầng: vận hành / phạm vi
- │ └─ vì: pilot_scope (HN/HCM) loại ticket kho DN trước khi tới write_gate    bằng chứng: S4-08 thuộc kho DN, báo "nằm ngoài pilot_scope" khi trace --stage after
- └─ [3] Không có tín hiệu riêng cảnh báo tỉ lệ fail_open tăng ở giờ cao điểm    tầng: vận hành / giám sát
- └─ vì: monitors.py (trước câu 3.6) chỉ có escalation_rate, không tách fail_open    bằng chứng: report trước câu 3.6 không có cột nào cho fail_open
+ └─ VÀ (cả hai nhánh phải cùng đúng thì tác hại mới xảy ra)
+ ├─ [1] Quyết định ghi SAI: LLM bị 429 dồn giờ cao điểm → fail_open → do_fault gán cứng True, không tra lại delay_cause thật
+ │      tầng: đầu vào / model · vì: nhánh fail_open không gọi carrier_at_fault · bằng chứng: ticket S4-08@seed 11 (và 55)
+ └─ [2] Lớp chặn KHÔNG chặn được: guard PM4 (write_gate, kiểm carrier_at_fault) lẽ ra phải deny file_carrier_fault ở [1]
+        tầng: chặn (guard) · trạng thái: CHƯA KIỂM CHỨNG trên ticket thật trong phạm vi pilot — S4-08 (kho DN) bị
+        pilot_scope loại trước khi tới write_gate nên chưa quan sát được PM4 có hoạt động đúng hay không
+        bằng chứng: trace --stage after báo "ticket nằm ngoài pilot_scope"
 ```
+
+**Ghi chú rời (không phải nhánh gây tác hại — khoảng trống giám sát, không tự gây ra việc ghi oan):** trước câu 3.6, `monitors.py` chỉ có `escalation_rate`, không tách riêng được tỉ lệ `fail_open`, nên vận hành không biết LLM đang nghẽn bao nhiêu % cho tới khi hậu quả đã xảy ra. Đã bổ sung `fail_open_carrier_fault_rate` — đây là lớp **phát hiện sau khi ghi**, không phải lớp **ngăn trước khi ghi** (đó vẫn là việc của nhánh [2]).
 
 | Lá | Specification bị vi phạm (phần mềm phải làm gì) | Giả định môi trường đã sai (thế giới ngoài phần mềm) |
 |---|---|---|
-| [1] | `do_fault` phải dựa vào `carrier_at_fault(tracking)`, không phải cờ nội bộ gán cứng khi LLM lỗi | "429 hiếm và ngẫu nhiên, không liên quan lượng ticket" (câu 3.3) |
-| [2] | Cổng PM4 phải áp dụng cho MỌI ticket đi qua agent, không phụ thuộc `pilot_scope` đang thu hẹp | "Thu hẹp phạm vi pilot là cách ngăn rủi ro" — thực ra chỉ **né**, chưa **ngăn**, vì nếu mở rộng `pilot_scope` sau này, lỗi [1] có thể lộ lại |
-| [3] | Phải có chỉ số theo dõi riêng cho những nhánh ghi sổ dựa trên đường dự phòng (`fail_open`) | "`escalation_rate` đủ để biết trợ lý đang gặp khó" — không đúng, vì `fail_open` vẫn tự xử lý (không escalate), chỉ là xử lý sai |
+| [1] | `do_fault` phải dựa vào `carrier_at_fault(tracking)`, không phải cờ nội bộ gán cứng khi LLM lỗi | "429 hiếm và ngẫu nhiên, không liên quan lượng ticket" — **chưa có dữ liệu kiểm chứng tỉ lệ thuận**, chỉ là giả định cần đo thêm (sửa theo góp ý Thái, câu 3.3) |
+| [2] | Guard PM4 phải áp dụng cho MỌI ticket đi qua agent và đã verify bằng test thật, không chỉ suy luận từ code | "Thu hẹp phạm vi pilot (`pilot_scope`) là cách ngăn rủi ro" — thực ra chỉ **né** (giảm số ticket gặp bug), chưa **ngăn** (chưa chứng minh code chặn đúng); nếu mở rộng `pilot_scope` sau này, nhánh [1] có thể lộ lại nếu [2] thật ra chưa chặn |
+
+**Lưu ý cho `wrongful_carrier_faults = 0`:** chỉ số này đang đúng trên đúng tập/phạm vi đã chạy (bộ nền + S4 trong `pilot_scope` hiện tại), **không chứng minh cho mọi ticket có thể gặp** — còn phụ thuộc kết quả kiểm chứng PM4 ở nhánh [2] trước khi khẳng định chắc chắn (góp ý Thái, mục C5).
 
 **Ví dụ mẫu một nhánh (bộ nền, đừng chép):** đỉnh "hãng VNX nhận lỗi oan cho đơn O-1002" ← [1] agent dùng độ trễ 5 ngày ←
 model lấy số trong ticket đè lên DB (`T-002@55`). Spec bị vi phạm: độ trễ dùng để ghi lỗi phải lấy từ tracking DB. Giả định
@@ -338,10 +343,10 @@ Thẻ S5 dùng mục này cho một con số kinh doanh: chi phí mỗi ticket t
 | **Bước / hành vi được đo** | Nhánh dự phòng khi LLM nghẽn (`fail_open`) có đi kèm ghi lỗi hãng (`file_carrier_fault`) hay không |
 | **Thước đo** (một câu, có đơn vị) | Tỉ lệ trial có cả sự kiện `proposal.basis == "fail_open"` VÀ lệnh `file_carrier_fault` được gọi (%) |
 | **Dữ liệu** (trường nào của trial, không có nhãn) | `events[].type == "proposal"` kèm `basis`; `events[].type == "tool"` kèm `tool == "file_carrier_fault"` — đọc trực tiếp từ `events`, không cần nhãn đúng/sai |
-| **Cách tính** (công thức, mẫu số, cách xử lý ca thiếu dữ liệu) | Với mỗi trial: `hit = có event proposal.basis=="fail_open" VÀ có event tool=="file_carrier_fault"`. Chỉ số = số trial `hit` / tổng số trial. Trial không có `events` (lỗi chạy) tính là không `hit`, không loại khỏi mẫu số |
-| **Khung thời gian / ngưỡng báo động** | Theo ca giờ cao điểm (480 phút); ngưỡng an toàn = 0 (ảnh hưởng bên thứ ba là hãng vận chuyển, không chấp nhận có ca nào) |
-| **Điểm mù** (chỉ số này KHÔNG thấy gì) | Không thấy ca `fail_open` mà KHÔNG ghi lỗi hãng (ví dụ ticket đó không cần `file_carrier_fault` vì lý do khác) — chỉ số này chỉ bắt đúng tổ hợp 2 sự kiện, không đo mọi hậu quả của `fail_open` (ví dụ hoàn tiền sai mà không kèm lỗi hãng) |
-| Giá trị trên bộ nền · trên thẻ (đọc mục `monitor` của report) | Bộ nền: `0.0` (mốc before và after) · Thẻ S4: `0.185366` (mốc before/base) → `0.052174` (mốc after, sau khi bộ nền chạy cổng vòng 1 — số liệu còn lại do S4-08 thuộc kho DN, hiện ngoài `pilot_scope` nên vẫn tính vào tập "visible" nhưng không được agent tự xử lý) |
+| **Cách tính** (công thức, mẫu số, cách xử lý ca thiếu dữ liệu) | Với mỗi trial: `hit = có event proposal.basis=="fail_open" VÀ có event tool=="file_carrier_fault"`. Chỉ số = số trial `hit` / tổng số trial trong `trials` được truyền vào. *(Sửa code theo góp ý Thái)* dùng `t.get("events", [])` để trial thiếu `events` không văng `KeyError`, tính là không `hit` — không loại khỏi mẫu số |
+| **Khung thời gian / ngưỡng báo động** | Hàm **không tự lọc** theo ca 480 phút — cửa sổ thời gian do bên gọi (`trials` truyền vào `lab10.eval`) quyết định. Ngưỡng an toàn = 0 cho ca thật sự oan (ảnh hưởng bên thứ ba); nhưng monitor không tự biết ca nào oan (xem Điểm mù) |
+| **Điểm mù** (chỉ số này KHÔNG thấy gì) | (1) Không thấy ca `fail_open` mà KHÔNG ghi lỗi hãng. (2) Sự kiện `tool` chỉ được ghi **sau khi** lệnh ghi đã qua guard và **thành công** — monitor không thấy các lần `write_gate` đã `deny`/`escalate` trước khi ghi. (3) **Quan trọng:** monitor không tự phân biệt ca ghi lỗi hãng đúng (thật sự do hãng) với ca ghi oan — "sáng đèn" chỉ có nghĩa "có tổ hợp hành vi cần đối soát", không có nghĩa "có lỗi"; đã xác nhận bằng trace thật (xem dòng dưới) |
+| Giá trị trên bộ nền · trên thẻ (đọc mục `monitor` của report) | Bộ nền: `0.0` (mốc before và after) · Thẻ S4: `0.185366` (mốc before) → `0.052174` (mốc after). *(Sửa theo góp ý Thái — đã dò lại đúng file trace, không suy luận)*: 6/115 trial "sáng đèn" ở mốc after là **`S4-04@44`, `S4-37@33`, `S4-39@33,44`, `S4-41@33,55`** — **không phải `S4-08`** (ticket đó bị `run_suite` loại hẳn khỏi tập trial vì ngoài `pilot_scope`, không còn trong mẫu số). Trace lại `S4-04`, `S4-37` ở `--stage after`: cả hai đều **ĐẠT** — `delay_cause: CARRIER` thật, ghi lỗi hãng đúng. Tức là: monitor chỉ bắt **tổ hợp hành vi** (`fail_open` + ghi lỗi hãng), không tự phân biệt đúng/oan — các ca còn "sáng đèn" ở after là ca hợp lệ, chưa có bằng chứng ca nào trong phạm vi pilot bị ghi oan sau cổng vòng 1. |
 
 ---
 
