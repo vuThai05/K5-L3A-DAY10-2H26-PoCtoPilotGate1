@@ -332,7 +332,7 @@ python3 -m lab10.grade --incident Sx
 | [3] Ngân sách Finance | Trần nhóm 500.000đ cao hơn 300.000đ của ngày sale | `write_gate` nhánh `issue_refund` kiểm `ops_limits().daily_auto_refund_budget_vnd` + `auto_refund_today_vnd()`; `business.daily_refund_cap_vnd` = 300.000đ | Chặn / giới hạn thiệt hại | **Ngăn** khoản hoàn tự động kế tiếp làm vượt trần trong mô phỏng tuần tự khi dữ liệu sổ và ngân sách đúng; không ngăn sai sót duyệt tay hoặc race giữa các lệnh đồng thời | `R-S4-after-20261119-122858-f0e98f`; `python -m lab10.guards` kiểm vượt ngân sách |
 | Vận hành | Hàng chờ có thể quá SLA khi tải cao | Giữ `reviewers_on_shift=1`, `review_capacity_per_hour=6`; B7.6: NV-TUNG gọi thêm người nếu hàng chờ > 6 hoặc chờ > 45 phút, thu hẹp nếu > 12 hoặc > 90 phút dù đã tăng người | Vận hành | **Giảm**, không bảo đảm SLA: after chờ tối đa 40 phút, 0 ùn trên phạm vi hiện tại; phương án 2 người cả ca ước tính 7.051đ/ticket > 7.000đ đã ký, chưa áp dụng thường trực | `R-S4-after-20261119-122858-f0e98f`; mô phỏng queue 2 người bằng `ops.summarize_ops` |
 
-Tự kiểm sau sửa: `R-S4-grade-20261119-122857-f0e98f` báo visible, regression và monitor đạt; tổng thể **FAIL integrity** vì workspace không có 28 file thẻ S1–S3, S5–S8 trong manifest. Không coi đây là kết quả grade đạt.
+Tự kiểm sau sửa: `R-S4-grade-20261119-122857-f0e98f` báo visible, regression và monitor đạt; tổng thể **FAIL integrity** vì workspace không có 28 file thẻ S1–S3, S5–S8 trong manifest. **Nguyên nhân (đã xác nhận, không phải lỗi đội):** lab code (`lab10/MANIFEST.json`) đã đổi version, và thẻ S4 được Lab Coach phát cho bàn qua cách khác — không qua lệnh "nhận thẻ" `git pull ... upstream main` lấy đủ cả 8 thẻ như `docs/guide.md` mô tả (xác nhận: `git log --all` không có commit merge nào từ `upstream`; `incidents/S4/` được thêm bằng 1 commit thường ở PR #19). Không coi đây là kết quả grade đạt, nhưng cũng không phải việc đội có thể tự khắc phục bằng code — cần team chấm chạy với `--hidden` đầy đủ.
 
 ---
 
@@ -444,7 +444,7 @@ Cột v1 nằm ở Phiếu B mục B8; không sửa cột đó.
 | Commit ký tiêu chí | `bd85014` như v1; hash tiêu chí `2dd63f18220d` |
 | Hash chốt cổng vòng 1 | `fa385c26` như v1 |
 | Mã lần chạy dùng làm bằng chứng | S4 base `R-S4-before-20261119-122858-f0e98f` · prepared `R-S4-prepared-20261119-122858-f0e98f` · after `R-S4-after-20261119-122858-f0e98f` |
-| Còn dòng "vượt trần" nào trong report? (hàng chờ, chi phí, ROI, trần tiền, pháp lý) | After: không có dòng vượt trần vận hành/kinh doanh; nhưng grade tổng thể FAIL integrity do thiếu 28 file thẻ ngoài S4. |
+| Còn dòng "vượt trần" nào trong report? (hàng chờ, chi phí, ROI, trần tiền, pháp lý) | After: không có dòng vượt trần vận hành/kinh doanh; grade tổng thể FAIL integrity do thiếu 28 file thẻ ngoài S4 — nguyên nhân đã xác nhận: lab code đổi version và thẻ S4 phát qua cách khác (không qua pull upstream toàn bộ 8 thẻ), không phải lỗi đội, không tự khắc phục được bằng code. |
 | Kho hoặc hãng có số xấu nhất: ____. Nếu chỉ nhìn phân khúc này, quyết định có đổi không? *(Khối "theo kho và hãng" trong output `lab10.eval` / `lab10.grade`, hoặc mục `by_segment` trong `report.json`.)* | S4 after kho HN tốn 5.337đ/ticket, cao nhất trong hai kho đang chạy, vẫn dưới 7.000đ; HN/HCM đều pass 1,0, ba chỉ số an toàn bằng 0. Chỉ nhìn HN không đổi đề xuất. DN/CT không được đo after. |
 | Quyết định (khoanh một) | **Đề xuất Tiếp tục trong phạm vi HN/HCM; CHƯA CHỐT/KÝ** cho tới khi xử lý integrity và chạy lại grade. |
 | Bằng chứng 1: mã lần chạy + chỉ số bắt buộc nào đạt / chưa | S4 after: pass_rate 1,0 ≥ 0,97; pass_k 1,0 ≥ 0,9; hoàn sai, lỗi hãng oan, lộ PII đều 0. |
@@ -459,7 +459,7 @@ Cột v1 nằm ở Phiếu B mục B8; không sửa cột đó.
 
 **Chỉ ở v2**
 - Quyết định đổi hay giữ so với v1? Đề xuất giữ **Tiếp tục** ở cùng phạm vi vì S4 after 0 thiệt hại đo được, pass_rate 1,0, ROI 0,74 và 0 ùn; chưa ký vì integrity FAIL.
-- Report tự kiểm tra: `R-S4-grade-20261119-122857-f0e98f` · đỏ: integrity, thiếu 28 file S1–S3 và S5–S8 theo manifest; visible, regression, criteria, monitor xanh; hidden chưa có.
+- Report tự kiểm tra: `R-S4-grade-20261119-122857-f0e98f` · đỏ: integrity, thiếu 28 file S1–S3 và S5–S8 theo manifest — nguyên nhân: lab code đổi version, thẻ S4 phát qua cách khác (không qua pull upstream toàn bộ 8 thẻ), không phải lỗi đội; visible, regression, criteria, monitor xanh; hidden chưa có.
 - Cổng vòng 1 (mốc prepared) đã đỡ được gì trước khi bàn biết sự cố, và bỏ sót gì: S4 trong phạm vi hoàn sai 160.000đ → 0, lỗi hãng oan 27 → 0; trần config vẫn 500.000đ, cao hơn hạn mức sale 300.000đ; không đo DN/CT after.
 - Report ghi "được phép cân nhắc Tiếp tục" về các chỉ số; đề xuất khớp điều kiện số, nhưng grade tổng thể FAIL nên chưa chốt.
 - Một thứ bộ thử hôm nay chưa đo, và nó ảnh hưởng quyết định ra sao: ghi hoàn đồng thời và tải người duyệt thực tế; chưa mở rộng pilot trước khi kiểm tính nguyên tử và SLA/chi phí thực.

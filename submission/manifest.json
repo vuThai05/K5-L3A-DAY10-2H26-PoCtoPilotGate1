@@ -1,5 +1,5 @@
 {
- "collected_at": "2026-11-19T12:34:00",
+ "collected_at": "2026-11-19T12:37:03",
  "incident": "S4",
  "run_ids": {
   "base": "R-S4-before-20261119-122858-f0e98f",
@@ -22,7 +22,7 @@
   "config/switches.json": "9fcdb809437346392c6ded442f4f562c357ef89a7688a454505f94bcd969866b",
   "docs/form-a-criteria.md": "005b99e0cefe6cfc25b1227e610f19f401ba4c4fc831a7a967baccaf405760d1",
   "docs/form-b-evaluation-gates.md": "2761de7328214989af61837e973c85a63ff97b6994cb78d6f8187a90c11d2cda",
-  "docs/form-c-incident.md": "5311b576096517a9a0af4a7773028ee82a7000913916bf960256ed4c63c76b60",
+  "docs/form-c-incident.md": "ca5ba69bb4f147bbe16132fb94cf6b40a84bcab819d420930b5f184053657b87",
   "runs/grade-report.json": "4953227a7e7a6ab7c4cd606fcb094b95911d7bd4ce05408c016a617d81436b38",
   "runs/grade-report.md": "bb56a44fd8582fcb9795975fbb95a190b21e085238a035941898010a5a00756d",
   "runs/journal.jsonl": "5b96f9cecdefdad63d887e4f2e10a174de104943f3a92841a97763c66c17cf3d",
