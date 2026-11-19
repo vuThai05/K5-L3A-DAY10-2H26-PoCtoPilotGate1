@@ -391,6 +391,8 @@ Lượng ticket có thể dồn gấp ba trong một giờ (ngày sale, sau bão
 
 **Đính chính cơ chế kiểm mẫu (`review_sampling_pct`):** không phải "chưa có cơ chế chạy" như note trước — `lab10/ops.py` hàm `recheck_plan` **có áp dụng** tỉ lệ 10% vào mô phỏng hàng chờ (report đã in "nhân viên kiểm lại 10% quyết định tự động"). Nhãn `"trust": "không áp dụng"` chỉ vì `data/world.json → staff_behavior.recheck_auto_decisions_pct = 0` (baseline giả định nhân viên chưa tự kiểm thêm tay), không phải vì `operating_gates.json` thiếu cấu hình — không cần sửa gì ở đây.
 
+**Bổ sung sau sự cố S4 (bút khác màu, câu 3.1 phần riêng của thẻ):** *(sửa theo góp ý Thái — đồng nhất với Phiếu C mục C1, không mâu thuẫn)* Giờ cao điểm thật trên thẻ S4 (ticket gấp 3, mốc `base` thật `R-S4-before-20261119-105232-da1642`): **PM3 đoán đúng triệu chứng** — mô phỏng xác nhận `4 ca bị ùn` ở `base` (`ops.violations`), đúng ý PM3 *"khách chờ quá SLA"*. Ở mốc `prepared`, `0 ca ùn` — nhưng **chưa đủ bằng chứng nói cổng vòng 1 (hay runbook này) đã xử lý được** tình trạng ùn, vì PM1/PM4/PM5 không đụng gì tới hàng chờ; nhiều khả năng do `pilot_scope` giảm số ticket agent phải xử lý. Cần kiểm lại ở vòng 2 (câu 3.5, Phiếu C mục C7/C9) trước khi ghi "PM3 đã được đỡ". Thêm: **một nhánh kỹ thuật PM3 chưa nhắc tới** — khi ticket dồn, LLM bị `429` dồn theo, agent rơi `fail_open`, có thể ghi oan lỗi hãng (xem Phiếu C mục C2, C4, C6). Ngưỡng cần thêm: **nếu `monitors.fail_open_carrier_fault_rate` > 0 trong một ca thì NV-TUNG phải đối chiếu trace từng ticket `fail_open` trong ca đó (không tự coi là lỗi, vì monitor không tự biết oan/đúng — xem Phiếu C mục C8) trước khi đối soát cuối ngày** — chưa có ngưỡng này trước sự cố.
+
 ---
 
 <a id="b8"></a>
