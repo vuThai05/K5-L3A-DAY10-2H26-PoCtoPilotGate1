@@ -13,3 +13,11 @@ lab10/guards_round1.py -text
 config/operating_gates.round1.json -text
 config/round1.lock -text
 config/acceptance_criteria.lock -text
+
+# TOÀN BỘ submission/ (do `lab10.check_submission --collect` chép lại): manifest.json
+# chốt hash SHA256 của mọi file lúc gom, nên MỌI file trong submission/ phải giữ
+# nguyên byte - không riêng 5 file khoá/đã ký. Thiếu dòng này thì autocrlf=true sẽ
+# đổi LF<->CRLF lúc git add/checkout và làm hash lệch (phát hiện thêm trên checkout
+# sạch: submission/code/guards.py, monitors.py cũng lệch, không chỉ các file khoá;
+# góp ý Thái + Dung, PR #35).
+submission/** -text whitespace=cr-at-eol
