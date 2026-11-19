@@ -2,8 +2,8 @@
 
 *Đây là kết quả TỰ KIỂM TRA của bàn, không phải điểm. Bài được một team chấm tự động chấm lại sau buổi học.*
 
-- Mã lần chạy: `R-S4-grade-20261119-121010-f0e98f` · bàn: `K5-L3A-DAY10-2H26-PoCtoPilotGate1` · grader `lab10-1.0` · 0.503s
-- Ba mốc: base `R-S4-before-20261119-121010-f0e98f` · prepared `R-S4-prepared-20261119-121010-f0e98f` · after `R-S4-after-20261119-121010-f0e98f` (report + trace trong runs/)
+- Mã lần chạy: `R-S4-grade-20261119-122857-f0e98f` · bàn: `K5-L3A-DAY10-2H26-PoCtoPilotGate1` · grader `lab10-1.0` · 0.621s
+- Ba mốc: base `R-S4-before-20261119-122858-f0e98f` · prepared `R-S4-prepared-20261119-122858-f0e98f` · after `R-S4-after-20261119-122858-f0e98f` (report + trace trong runs/)
 - Mốc prepared (cổng vòng 1): đã chốt `fa385c26`, còn nguyên
 - Hash code đội (guards + monitors + switches + cổng vận hành): `f0e98f671b8b`
 - Hash Bản tiêu chí chấp nhận: `2dd63f18220d` · đã ký: `2dd63f18220d` · KHÔNG ĐỔI

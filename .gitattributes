@@ -13,3 +13,13 @@ lab10/guards_round1.py -text
 config/operating_gates.round1.json -text
 config/round1.lock -text
 config/acceptance_criteria.lock -text
+
+# Bản sao trong submission/ (do `lab10.check_submission --collect` chép lại) của
+# đúng các file khoá/đã ký trên - phải giữ NGUYÊN BYTE với bản gốc, vì
+# submission/manifest.json chốt hash lúc gom; checkout trên máy có autocrlf=true
+# sẽ đổi LF->CRLF và làm hash lệch nếu không khai -text ở đây (góp ý Thái, PR #35).
+submission/code/guards_round1.py -text
+submission/config/acceptance_criteria.json -text
+submission/config/acceptance_criteria.lock -text
+submission/config/operating_gates.round1.json -text
+submission/config/round1.lock -text

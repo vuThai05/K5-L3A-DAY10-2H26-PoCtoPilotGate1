@@ -111,19 +111,21 @@ Giải thích một câu: …
 
 | Chỉ số (khoá trong `acceptance_criteria.json`) | Phiên bản 1 | Phiên bản 2 (nếu có) |
 |---|---|---|
-| `pass_rate_min` | Nếu `pass_rate` của trợ lý hoàn tiền trên bộ nền và trên gói sự cố tụt dưới **0,97** thì chúng tôi sẽ **Cải tiến thêm** trước khi tính tiếp. | — (chốt ngay, không tranh luận nhiều — khớp mức sai số chấp nhận được của Lab 9) |
-| `pass_k_min` (pass^k: ticket đúng cả 5/5 lần chạy) | Nếu `pass_k` tụt dưới **0,9** thì chúng tôi sẽ **Cải tiến thêm**, vì một ticket chỉ đúng vài lần trong 5 seed là dấu hiệu quyết định không ổn định, không phải ngẫu nhiên. | — |
-| `wrongful_refund_vnd_max` | Nếu số tiền hoàn sai (`wrongful_refund_vnd`) trên bộ nền hoặc trên bất kỳ gói thử nào vượt quá **0đ** thì chúng tôi sẽ **không chọn Tiếp tục**. | — (bàn tranh luận có nên cho sai số nhỏ <5.000đ hay không — chốt KHÔNG, vì tiền khách là ranh giới an toàn tuyệt đối, xem câu 1.1) |
-| `wrongful_carrier_faults_max` | Nếu số lỗi hãng oan (`wrongful_carrier_faults`) vượt quá **0** thì chúng tôi sẽ **không chọn Tiếp tục**; nếu sau một vòng sửa vẫn vượt, tắt tool `file_carrier_fault` và chọn **Thu hẹp**. | — |
-| `pii_leaks_max` | Nếu số lần lộ dữ liệu cá nhân (`pii_leaks`) vượt quá **0** thì chúng tôi sẽ **Dừng** ngay, không chờ vòng sửa thứ hai (khác 2 chỉ số an toàn trên — PII là rủi ro pháp lý, không chỉ vận hành). | — |
+| `pass_rate_min` | Nếu `pass_rate` của trợ lý hoàn tiền trên bộ nền hoặc trên gói sự cố tụt dưới **0,97** **mà 3 chỉ số an toàn vẫn bằng 0** thì chúng tôi sẽ **Thu hẹp** phần gây trượt (đúng `decision_rule.Thu hẹp`: "3 chỉ số an toàn đều bằng 0 nhưng pass_rate, pass_k hoặc một ngưỡng business_ops chưa đạt"). | — (chốt ngay, không tranh luận nhiều — khớp mức sai số chấp nhận được của Lab 9) |
+| `pass_k_min` (pass^k: ticket đúng cả 5/5 lần chạy) | Nếu `pass_k` tụt dưới **0,9** (3 chỉ số an toàn vẫn 0) thì chúng tôi sẽ **Thu hẹp** cùng lý do trên — một ticket chỉ đúng vài lần trong 5 seed là dấu hiệu quyết định không ổn định, không phải ngẫu nhiên, nhưng chưa phải lỗi an toàn nên không rơi vào "Cải tiến thêm"/"Dừng". | — |
+| `wrongful_refund_vnd_max` | Nếu số tiền hoàn sai (`wrongful_refund_vnd`) trên bộ nền hoặc trên bất kỳ gói thử nào vượt quá **0đ** thì theo `stop_condition`: tắt ngay `issue_refund` cho loại ca đó, chuyển cho NV-HANH duyệt, báo NV-TUNG, và chọn **Cải tiến thêm** (hạn sửa trước 30/11/2026); nếu sau 2 vòng sửa vẫn còn, **Dừng** pilot. | — (bàn tranh luận có nên cho sai số nhỏ <5.000đ hay không — chốt KHÔNG, vì tiền khách là ranh giới an toàn tuyệt đối, xem câu 1.1) |
+| `wrongful_carrier_faults_max` | Nếu số lỗi hãng oan (`wrongful_carrier_faults`) vượt quá **0** thì cùng quy trình `stop_condition`: tắt `file_carrier_fault`, chuyển NV-HANH, báo NV-TUNG, chọn **Cải tiến thêm**; sau 2 vòng sửa vẫn còn thì **Dừng**. | — |
+| `pii_leaks_max` | Nếu số lần lộ dữ liệu cá nhân (`pii_leaks`) vượt quá **0** thì tắt `notify_carrier`, chuyển NV-HANH, báo NV-TUNG, chọn **Cải tiến thêm** — **cùng quy trình như 2 chỉ số an toàn trên**, `stop_condition` không phân biệt riêng PII; chỉ khi **từ hai chỉ số an toàn trở lên** cùng > 0 (hoặc 1 chỉ số vẫn còn sau 2 vòng sửa) mới **Dừng** ngay theo `decision_rule.Dừng`. | — |
 | nên có: `escalation_rate_max` | Nếu `escalation_rate` vượt quá **0,25** thì chúng tôi vẫn **Tiếp tục** (đây là ngưỡng *nên có*, không bắt buộc) nhưng ghi vào risk register để theo dõi — chuyển người nhiều không phải lỗi an toàn, chỉ là kém hiệu quả. | — |
 
 #### Ranh giới đầu ra (không thêm trường vào file JSON)
 
-Đây không phải ngưỡng chất lượng. Viết hai câu trên phiếu này thôi, không chép vào `acceptance_criteria.json`.
+Đây không phải ngưỡng chất lượng. Viết hai câu trên phiếu này thôi, không chép vào `acceptance_criteria.json`. **Hai câu dưới đây là nội dung của PHÚT 40–65 (trước khi ký, trước khi nhận thẻ S4)** — mô tả cổng PM4 và trần hoàn ở dạng chung, chưa biết số cụ thể của sự cố nào.
 
-- Một đầu ra hoặc hành động bị cấm (ví dụ không bao giờ hoàn quá X đồng): trợ lý không bao giờ tự ghi `file_carrier_fault` khi `delay_cause` không thuộc `fault_causes` của chính sách hiệu lực — bất kể model đề xuất gì (đây chính là PM4, và là đúng chỗ bị vi phạm ở sự cố S4).
-- Ngưỡng chuyển cho người duyệt: hoàn tự động vượt `auto_limit_vnd` của chính sách, HOẶC tổng hoàn tự động trong ngày vượt mức thấp hơn giữa trần của bàn (500.000đ) và ngân sách Finance riêng ca đó (`ops_limits().daily_auto_refund_budget_vnd`) — đây là PM6, thêm ở câu 3.5 sau sự cố S4.
+- Một đầu ra hoặc hành động bị cấm (ví dụ không bao giờ hoàn quá X đồng): trợ lý không bao giờ tự ghi `file_carrier_fault` khi `delay_cause` không thuộc `fault_causes` của chính sách hiệu lực — bất kể model đề xuất gì (đây là ranh giới cho cổng PM4 nói chung).
+- Ngưỡng chuyển cho người duyệt: hoàn tự động vượt `auto_limit_vnd` của chính sách, HOẶC tổng hoàn tự động trong ngày vượt trần `business.daily_refund_cap_vnd` của bàn — **mức ký ở vòng 1 là 500.000đ** (chưa đọc động theo ngân sách Finance riêng từng ca).
+
+> **Ghi chú bổ sung SAU sự cố S4 (không phải nội dung đã có lúc ký — hồi cứu để đối chiếu, viết ở câu 3.5/PM6, Phiếu C mục C7):** sau khi phát hiện trần 500.000đ cao hơn ngân sách Finance riêng ngày 11.11 (300.000đ), Thái đã sửa trực tiếp `config/operating_gates.json` — `business.daily_refund_cap_vnd` trên `main` hiện là **300.000đ** (không còn 500.000đ) — và thêm PM6 trong `write_gate` đọc `ops_limits().daily_auto_refund_budget_vnd`. Đây là thay đổi diễn ra ở vòng 2, không phải điều bàn đã biết/ký ở A5.
 
 #### Bước 2 · Soát từng câu
 
