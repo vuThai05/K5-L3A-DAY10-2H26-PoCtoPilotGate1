@@ -123,9 +123,11 @@ Vai: Sản phẩm và kinh doanh. `config/acceptance_criteria.json`, `config/ope
 - Commit `23ddc4b`, `b14d1f1` (câu 1.1); `f1e6d90` (câu 1.6, nội dung được gộp vào PR #18 và ký).
 - PR #8, #13, #17, #22, #27.
 
+- Vòng 2 (thẻ S4): câu 3.2 (specification, Phiếu C mục C5). Góp ý 2 lượt trên PR #32 (03:28 và 04:39, 19/11) — đồng ý merge phần phân tích 3.0–3.4/3.6, giữ issue mở cho câu 3.5. Trên PR #35: vote quyết định v2 là **Tiếp tục trong phạm vi HN/HCM**, không mở rộng `pilot_scope` sang DN/CT cho tới khi kiểm chứng riêng sau REFUND-v4; đề nghị nhóm báo trực tiếp Lab Coach về integrity FAIL trước khi nộp.
+
 ### Việc còn phải làm (chưa xong tới lúc viết file này)
 
-- Vòng 2 (thẻ S4, issue #4): câu hỏi 4 (trần hoàn ngày) đã được Thái làm hộ ở PR #33 do thời gian còn ngắn (issue #4 chuyển assignee sang Thái, có ghi lý do); Hạnh chưa tự comment ý kiến trên PR #32 về câu hỏi 2/3 (hướng sửa 3.5, quyết định v2) và chưa ký PIC ở C12.
+- Câu hỏi 4 (trần hoàn ngày, issue #4) đã được Thái làm hộ ở PR #33 do thời gian còn ngắn (issue #4 chuyển assignee sang Thái, có ghi lý do). Chưa ký PIC ở C12 (chờ cả bàn chốt xong).
 
 ### Exit ticket
 
