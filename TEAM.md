@@ -93,7 +93,8 @@ Vai: Kỹ sư cổng. `lab10/guards.py`, `lab10/monitors.py`; Phiếu B mục B1
 
 ### Exit ticket
 
-*(Dung tự viết: một điều học được trong buổi, một điều còn chưa chắc — không điền hộ.)*
+- **Điều em học được:** Một chỉ số theo dõi chỉ báo hiệu hành vi cần kiểm tra, không tự kết luận đúng sai. Với `fail_open_carrier_fault_rate`, em phải đọc trace của từng ca sáng đèn: cả 6 ca ở mốc `after` của S4 đều ghi lỗi hãng đúng, dù chỉ số khác 0.
+- **Điều em còn chưa chắc:** Khi thu hẹp `pilot_scope` làm số trial giảm từ 205 xuống 115, tỉ lệ sáng đèn giảm có phản ánh rủi ro thực sự giảm hay chỉ do thay đổi tập ticket? Em muốn kiểm thêm trên cùng phạm vi và trong giờ cao điểm trước khi dùng chỉ số này để quyết định mở rộng pilot.
 
 ## NguyenThiHongHanh-2A202603537
 
