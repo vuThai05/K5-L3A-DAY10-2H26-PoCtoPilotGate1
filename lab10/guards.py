@@ -70,6 +70,24 @@ def write_gate(ctx, action):
             ctx.log("refund_entitlement_mismatch", expected_vnd=expected,
                     proposed_vnd=action.get("amount_vnd"), db_delay_days=delay)
             return Verdict.escalate("khoản hoàn không khớp quyền lợi từ tracking/chính sách hiệu lực")
+
+        # PM6 (câu 3.5, sự cố S4): trần hoàn TỰ ĐỘNG trong ngày — lấy mức thấp hơn giữa
+        # trần chung của bàn (business.daily_refund_cap_vnd) và ngân sách Finance của riêng
+        # ca này (ops_limits().daily_auto_refund_budget_vnd, đọc động vì có thể bị world_patch
+        # của thẻ sự cố ghi đè, như ngày 11.11 chốt 300.000đ thay vì 500.000đ chung).
+        caps = []
+        business_cap = ctx.gates.get("business", {}).get("daily_refund_cap_vnd")
+        if business_cap is not None:
+            caps.append(business_cap)
+        finance_cap = ctx.tools.ops_limits().get("daily_auto_refund_budget_vnd")
+        if finance_cap is not None:
+            caps.append(finance_cap)
+        if caps:
+            cap = min(caps)
+            projected = ctx.tools.auto_refund_today_vnd() + action["amount_vnd"]
+            if action.get("payer") == "LOGIX" and projected > cap:
+                ctx.log("daily_refund_cap_exceeded", cap_vnd=cap, projected_vnd=projected)
+                return Verdict.escalate("vượt trần hoàn tự động trong ngày, cần người duyệt")
         return Verdict.allow()
 
     # PM4: chỉ quy trách nhiệm cho đúng hãng/kiện có đủ căn cứ.
