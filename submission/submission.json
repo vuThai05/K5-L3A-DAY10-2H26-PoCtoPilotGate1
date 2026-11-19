@@ -6,12 +6,12 @@
     "NguyenThiThuyDung-2A202603552",
     "NguyenThiHongHanh-2A202603537"
   ],
-  "incident": "",
-  "decision_v1": "",
+  "incident": "S4",
+  "decision_v1": "Tiếp tục",
   "decision_v2": "",
   "three_lines": {
-    "environment_assumption": "",
-    "reduce_or_prevent": "",
-    "measure_in_pilot": ""
+    "environment_assumption": "Tracking và ngân sách Finance luôn chính xác, cập nhật kịp thời và mọi lệnh ghi đều đi qua gate.",
+    "reduce_or_prevent": "Gate ngăn khoản hoàn tự động vượt ngân sách trong mô phỏng tuần tự khi sổ và ngân sách đúng, nhưng chỉ giảm rủi ro tổng thể vì dữ liệu sai, duyệt tay hoặc ghi đồng thời chưa được bảo đảm.",
+    "measure_in_pilot": "Đo tỷ lệ 429/fail_open, lỗi hãng oan, tiền hoàn sai, SLA hàng chờ, chi phí/ROI và tính nguyên tử của trần theo ngày trên dữ liệu và tải thực."
   }
 }

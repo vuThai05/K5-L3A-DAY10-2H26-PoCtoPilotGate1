@@ -32,8 +32,8 @@ Mỗi lệnh `lab10.eval` và `lab10.grade` tự ghi một dòng vào `runs/jour
 |---|---|---|---|---|---|---|---|---|
 | 1 | `R-S4-prepared-20261119-105232-da1642` | S4 · prepared | nhận thẻ đã bốc, chưa sửa thêm (đúng cổng vòng 1 đã chốt `fa385c26`) | 1,0 (115 trial) | 1,0 | 0đ · 0 · 0 | — | 0 ca ùn, `violations=[]`; base cùng bộ mã (`R-S4-before-20261119-105232-da1642`, 205 trial) có 4 ca ùn + vượt ngân sách 300k — xem C1 |
 | 2 | `R-S4-after-20261119-105232-da1642` | S4 · after | thêm monitor `fail_open_carrier_fault_rate` (câu 3.6); chưa sửa `guards.py`/`operating_gates.json` (đang chờ PR #32 góp ý) | 1,0 (115 trial) | 1,0 | 0đ · 0 · 0 | — | Số giống `prepared` vì chưa đổi cổng; monitor sáng đèn 0,052174 (6/115, đã verify ĐẠT hết — xem C8) |
-| 3 | | Sx · after | *(điền sau khi sửa câu 3.5 theo kết quả PR #32)* | | | | | |
-| 4 | `R-base-after-20261119-110454-da1642` | base · after | kiểm không regression sau khi thêm monitor (chưa sửa guards/gates) | 1,0 | 1,0 | 0đ · 0 · 0 | — | *(Sửa theo góp ý Thái)* So với `R-base-before-20261119-110503-da1642` (110 trial, `failed: ['T-002@55']`): bản `after` chỉ còn 65 trial (do `pilot_scope` HN/HCM), `failed: []`. `T-002` (đơn `O-1002`, kho HCM) **nằm trong** 65 trial này và đã hết hỏng — đúng là hết regression trên phần trong phạm vi. Chưa kiểm được các ticket bị `pilot_scope` loại (kho DN/CT) vì chúng không còn chạy qua agent. |
+| 3 | `R-S4-after-20261119-114658-098f5a` | S4 · after | Thêm kiểm ngân sách Finance trong guard và giảm trần config 500.000 → 300.000đ | 1,0 [1,0; 1,0] | 1,0 | 0đ · 0 · 0 | 0,3565 | 115 trial trong phạm vi; tổng hoàn tự động lớn nhất 292.000đ, không vượt ngân sách. |
+| 4 | `R-base-after-20261119-114721-098f5a` | base · after | Kiểm bộ nền sau sửa ngân sách | 1,0 [1,0; 1,0] | 1,0 | 0đ · 0 · 0 | 0,2462 | 65 trial trong phạm vi đều đạt; grade kiểm regression báo không có ca mới hỏng. Ngoài phạm vi không được agent chạy. |
 
 ---
 
@@ -327,9 +327,12 @@ python3 -m lab10.grade --incident Sx
 
 | Nhánh fault tree | Nguyên nhân | Chỗ sửa (hàm + nhánh trong `guards.py`, hoặc khoá trong `operating_gates.json`) | Tầng (phát hiện / chặn / giới hạn thiệt hại / vận hành) | GIẢM khả năng hay NGĂN hẳn? Vì sao | Mã lần chạy sau khi sửa |
 |---|---|---|---|---|---|
-| [1] | | | | | |
-| [2] | | | | | |
-| [3] | | | | | |
+| [1] Quyết định sai khi `fail_open` | Nhánh dự phòng có thể đề xuất hoàn/ghi lỗi sai | Giữ PM1 và PM4 trong `write_gate`: tính lại quyền lợi, đối chiếu nguyên nhân và kiện từ tracking/chính sách | Chặn | **Ngăn** ghi sai theo các điều kiện được kiểm nếu tracking/chính sách đúng và mọi lệnh qua gate; không ngăn LLM 429, dữ liệu nguồn sai hoặc đường ghi ngoài gate | `R-S4-after-20261119-114658-098f5a` |
+| [2] Lớp chặn thiếu/hỏng | Trước đây base không có PM4; prepared đã có | Giữ PM4 và cổng pháp lý `carrier_fault_requires_recorded_cause`; không sửa snapshot vòng 1 | Chặn | **Giảm** nguy cơ tổng thể; 0 lỗi oan trên 115 trial after chưa chứng minh mọi đầu vào. S4-08 ngoài phạm vi, cần thử trực tiếp trước khi mở rộng | `R-S4-after-20261119-114658-098f5a` |
+| [3] Ngân sách Finance | Trần nhóm 500.000đ cao hơn 300.000đ của ngày sale | `write_gate` nhánh `issue_refund` kiểm `ops_limits().daily_auto_refund_budget_vnd` + `auto_refund_today_vnd()`; `business.daily_refund_cap_vnd` = 300.000đ | Chặn / giới hạn thiệt hại | **Ngăn** khoản hoàn tự động kế tiếp làm vượt trần trong mô phỏng tuần tự khi dữ liệu sổ và ngân sách đúng; không ngăn sai sót duyệt tay hoặc race giữa các lệnh đồng thời | `R-S4-after-20261119-114658-098f5a`; `python -m lab10.guards` kiểm vượt ngân sách |
+| Vận hành | Hàng chờ có thể quá SLA khi tải cao | Giữ `reviewers_on_shift=1`, `review_capacity_per_hour=6`; B7.6: NV-TUNG gọi thêm người nếu hàng chờ > 6 hoặc chờ > 45 phút, thu hẹp nếu > 12 hoặc > 90 phút dù đã tăng người | Vận hành | **Giảm**, không bảo đảm SLA: after chờ tối đa 40 phút, 0 ùn trên phạm vi hiện tại; phương án 2 người cả ca ước tính 7.051đ/ticket > 7.000đ đã ký, chưa áp dụng thường trực | `R-S4-after-20261119-114658-098f5a`; mô phỏng queue 2 người bằng `ops.summarize_ops` |
+
+Tự kiểm sau sửa: `R-S4-grade-20261119-114850-098f5a` báo visible, regression và monitor đạt; tổng thể **FAIL integrity** vì workspace không có 28 file thẻ S1–S3, S5–S8 trong manifest. Không coi đây là kết quả grade đạt.
 
 ---
 
@@ -355,23 +358,26 @@ Thẻ S5 dùng mục này cho một con số kinh doanh: chi phí mỗi ticket t
 
 <a id="c9"></a>
 
-## C9 · Câu 3.7 · Fault tree SAU khi sửa (mã lần chạy: `__________`)
+## C9 · Câu 3.7 · Fault tree SAU khi sửa (mã lần chạy: `R-S4-after-20261119-114658-098f5a`)
 
 Vẽ lại cây ở C6. Ở mỗi nhánh đã xử lý, thêm một nút `VÀ [gate … hỏng]` và ghi:
 
 ```
-[ĐỈNH] ______________________________
- └─ HOẶC
- ├─ [1] ______________ VÀ [gate ______ hỏng]
- ├─ [2] ______________ VÀ [gate ______ hỏng]
- └─ [3] ______________ (còn hở?)
+[ĐỈNH] Hãng bị ghi oan lỗi giao trễ
+ └─ VÀ: quyết định quy lỗi sai (ví dụ fail_open) VÀ PM4/cổng pháp lý không chặn được lệnh ghi
+        ├─ Đầu vào tracking/chính sách sai hoặc thiếu; hoặc đường ghi không qua gate [còn hở]
+        └─ Monitor phát hiện sau ghi, không chặn việc ghi [còn hở]
+
+[ĐỈNH RIÊNG] Tổng hoàn tự động vượt ngân sách Finance trong ngày
+ └─ VÀ: khoản hoàn làm vượt hạn mức VÀ guard ngân sách/config không chặn
+        └─ Sổ/ngân sách sai hoặc ghi đồng thời ngoài giả định mô phỏng tuần tự [còn hở]
 ```
 
 | Nhánh | Gate (hàm trong `guards.py` / khoá config / metric trong `monitors.py`) | Tầng gate (phát hiện / chặn / giới hạn thiệt hại / vận hành) | Giảm hay ngăn? Vì sao | Nhánh còn hở |
 |---|---|---|---|---|
-| [1] | | | | |
-| [2] | | | | |
-| [3] | | | | |
+| [1] Quy lỗi sai | `write_gate` PM4 + `legal.carrier_fault_requires_recorded_cause` | Chặn | Ngăn lệnh không khớp tracking/policy theo điều kiện được kiểm; giảm rủi ro thực tế, không chứng minh mọi trường hợp | Dữ liệu sai, đường ghi ngoài gate; S4-08 ngoài pilot chưa kiểm end-to-end |
+| [2] LLM lỗi | `fail_open_carrier_fault_rate` | Phát hiện sau ghi | Giảm thời gian phát hiện, không chặn sự cố; 6/115 trial sáng đèn cần đối soát | Không thấy hoàn sai không kèm ghi lỗi hãng, không phân biệt oan/đúng |
+| [3] Ngân sách | `write_gate` kiểm Finance; `business.daily_refund_cap_vnd=300000` | Chặn | Ngăn vượt trần hoàn tự động trong mô phỏng tuần tự với dữ liệu đúng; after 292.000đ | Duyệt tay, cạnh tranh đồng thời, thiếu/sai dữ liệu ngân sách |
 
 ---
 
@@ -381,7 +387,9 @@ Vẽ lại cây ở C6. Ở mỗi nhánh đã xử lý, thêm một nút `VÀ [g
 
 | Rủi ro | Khả năng | Tác động | Người phụ trách (PIC, một người) | Dấu hiệu (metric nào, ngưỡng nào) | Xử lý | Ảnh hưởng bước đánh giá | Nhóm chức năng (GOVERN / MAP / MEASURE / MANAGE) |
 |---|---|---|---|---|---|---|---|
-| | | | | | | | |
+| LLM 429 dẫn tới ghi lỗi hãng sai | Trung bình | Cao | Vũ Quang Thái | `fail_open_carrier_fault_rate > 0` trong ca: báo đối soát, không đồng nghĩa ghi oan | NV-TUNG kiểm trace; nếu xác nhận ghi oan, tắt `file_carrier_fault`, chuyển người | Chưa mở rộng pilot cho tới khi kiểm PM4 trên ca tương ứng và đối soát thực tế | MEASURE |
+| Hàng chờ vượt SLA do tải tăng | Trung bình | Cao | Lưu Thanh Mỹ | `queue_wait_max_min > 45` hoặc hàng chờ > 6 ca | NV-TUNG gọi thêm người; nếu > 90 phút hoặc > 12 ca dù đã tăng người thì thu hẹp/tắt | Đo SLA và chi phí thật trước khi mở rộng | MANAGE |
+| Ngân sách Finance thay đổi hoặc ghi đồng thời | Trung bình | Cao | Nguyễn Thị Hồng Hạnh | `auto_refund_day_max_vnd` tiến gần 300.000đ; > 300.000đ là vi phạm | Đối soát ngân sách và sổ; dừng tự động nếu phát hiện vượt, chuyển người | Cần kiểm tính nguyên tử và dữ liệu Finance thật trước pilot | MANAGE |
 
 Quy tắc: **mỗi dòng phải đổi được một quyết định.** Cột "Dấu hiệu" phải là một metric có trong `monitors.py` hoặc trong report.
 
@@ -397,26 +405,29 @@ Ghi các dòng đổi sau sự cố. Mỗi dòng vẫn phải có một PIC có 
 
 | # nhóm | Trạng thái mới (Xong / Chưa / Không áp dụng) | Bằng chứng mới (mã lần chạy, mục phiếu, số trong report) | PIC |
 |---|---|---|---|
-| | | | |
-| | | | |
+| 4 Quyền hạn | Xong trong phạm vi mô phỏng | PM1/PM4 và kiểm ngân sách `write_gate`; after S4 0 hoàn sai, 0 lỗi hãng oan | Nguyễn Thị Thùy Dung |
+| 5 Hiệu năng, hạ tầng | Chưa | S4 after chờ tối đa 40 phút, 0 ùn; chưa đo tải và năng lực người thật | Vũ Quang Thái |
+| 6 Kinh doanh | Chưa | Trần 300.000đ; after chi phí 5.747đ, ROI 0,74; cần xác nhận ngân sách sale thực tế | Nguyễn Thị Hồng Hạnh |
+| 8 Con người, pháp lý | Chưa | After 0 PII/0 lỗi hãng oan trên tập thử; chưa đối soát bên thứ ba thật | Lưu Thanh Mỹ |
+| 9 Quyết định | Chưa | `R-S4-grade-20261119-114850-098f5a`: integrity FAIL, cần xử lý trước khi ký v2 | Lưu Thanh Mỹ |
 
 ### Runbook 4 · Sau sự cố trên thẻ (vòng 2)
 
 | Câu hỏi | Trả lời |
 |---|---|
-| Tín hiệu nào ở Runbook 2 (Phiếu B mục B7.5) lẽ ra phải báo trước sự cố này? Nó đã có chưa? | |
-| Bàn thêm hoặc đổi ngưỡng nào, từ bao nhiêu thành bao nhiêu? | |
-| Bàn đổi gì về **người** (số người trực, ai đứng tên, ai được gọi)? | |
-| Bàn đổi gì về **phạm vi** hoặc **quy trình** (kiểm mẫu, ghi chú giải thích, trần)? | |
-| Nói gì với bên thứ ba bị ảnh hưởng (hãng, shop, người nhận, nhân viên duyệt), ai nói, trong bao lâu? | |
-| Dữ liệu cá nhân nào đã rời hệ thống mà không thu hồi được? Báo cho ai? | |
-| Sự cố lộ ra trước qua số máy đo, phản hồi của người, hay đọc nội dung? Nguồn nào bàn chưa có? | |
+| Tín hiệu nào ở Runbook 2 (Phiếu B mục B7.5) lẽ ra phải báo trước sự cố này? Nó đã có chưa? | Chờ > 45 phút hoặc hàng chờ > 6 trong B7.6; base S4 chờ tối đa 78 phút. Monitor mới báo tổ hợp fail_open/ghi hãng sau ghi; chưa có cảnh báo sớm 429 theo thời gian. |
+| Bàn thêm hoặc đổi ngưỡng nào, từ bao nhiêu thành bao nhiêu? | Trần hoàn tự động 500.000 → 300.000đ; đối soát khi `fail_open_carrier_fault_rate > 0`. |
+| Bàn đổi gì về **người** (số người trực, ai đứng tên, ai được gọi)? | Giữ 1 người, NV-HANH duyệt; NV-TUNG gọi tăng cường khi vượt ngưỡng B7.6. Chưa xác nhận danh tính/khả dụng người tăng cường. |
+| Bàn đổi gì về **phạm vi** hoặc **quy trình** (kiểm mẫu, ghi chú giải thích, trần)? | Giữ pilot HN/HCM, kiểm mẫu 10%, ghi lý do; hạ trần 300.000đ và kiểm ngân sách Finance trước ghi. Ngoài phạm vi xử lý tay. |
+| Nói gì với bên thứ ba bị ảnh hưởng (hãng, shop, người nhận, nhân viên duyệt), ai nói, trong bao lâu? | Khi xác nhận quy lỗi sai, NV-TUNG báo hãng và người duyệt trong 15 phút, nêu mã vụ việc, tạm dừng đối soát lỗi và thời hạn kiểm lại; không gửi PII không cần thiết. Đây là quy trình đề xuất, chưa xác nhận đã liên hệ. |
+| Dữ liệu cá nhân nào đã rời hệ thống mà không thu hồi được? Báo cho ai? | S4 after đo 0 lần lộ PII; không suy ra chưa từng có rò rỉ thực tế. Nếu xác nhận rò rỉ, ghi trường và người nhận, báo NV-TUNG và phụ trách pháp lý Lưu Thanh Mỹ ngay; không giả định thu hồi được. |
+| Sự cố lộ ra trước qua số máy đo, phản hồi của người, hay đọc nội dung? Nguồn nào bàn chưa có? | Kịch bản nêu phản hồi giám sát/Finance; mô phỏng và trace xác nhận. Chưa có telemetry 429 theo phút và đối soát hãng thực tế. |
 
 ### Runbook 5 · Ba kịch bản "nếu … thì …" cho tuần đầu chạy thử thật
 
-1. Nếu số ticket tăng gấp ___ lần trong một giờ thì: …
-2. Nếu nhà cung cấp LLM lỗi quá ___ phút thì: …
-3. Nếu người duyệt báo không tin một quyết định của trợ lý thì: …
+1. Nếu số ticket tăng gấp **3 lần** trong một giờ thì NV-TUNG theo dõi hàng chờ; gọi thêm người khi > 6 ca hoặc chờ > 45 phút; nếu > 12 ca hoặc > 90 phút dù đã tăng người thì thu hẹp/tắt theo B7.6.
+2. Nếu nhà cung cấp LLM lỗi quá **5 phút** thì NV-TUNG tạm tắt `issue_refund` và `file_carrier_fault`, chuyển ca cho NV-HANH; chỉ bật lại khi kiểm thử và hai người có thẩm quyền xác nhận. 5 phút là ngưỡng vận hành đề xuất, cần telemetry thực tế.
+3. Nếu người duyệt không tin quyết định thì giữ lệnh liên quan, kiểm tracking/chính sách và sổ, ghi lý do; nếu xác nhận ghi sai thì tắt thao tác tương ứng và báo NV-TUNG.
 
 ---
 
@@ -430,30 +441,30 @@ Cột v1 nằm ở Phiếu B mục B8; không sửa cột đó.
 
 | | **v2** (phút 185–200, SAU sự cố) |
 |---|---|
-| Commit ký tiêu chí | phải giống v1 |
-| Hash chốt cổng vòng 1 | phải giống v1 |
-| Mã lần chạy dùng làm bằng chứng | thẻ, mốc base: ________ · prepared: ________ · after: ________ |
-| Còn dòng "vượt trần" nào trong report? (hàng chờ, chi phí, ROI, trần tiền, pháp lý) | |
-| Kho hoặc hãng có số xấu nhất: ____. Nếu chỉ nhìn phân khúc này, quyết định có đổi không? *(Khối "theo kho và hãng" trong output `lab10.eval` / `lab10.grade`, hoặc mục `by_segment` trong `report.json`.)* | |
-| Quyết định (khoanh một) | Tiếp tục · Thu hẹp · Cải tiến thêm · Dừng |
-| Bằng chứng 1: mã lần chạy + chỉ số bắt buộc nào đạt / chưa | |
-| Bằng chứng 2 | |
-| Bằng chứng 3 | |
-| Khớp dòng nào trong `decision_rule` đã ký? | |
-| Nếu Thu hẹp: cắt kho nào / còn bao nhiêu phần trăm / mấy người trực, và ticket bị cắt đi đâu | |
-| Nếu Cải tiến thêm: giả thuyết cụ thể (nhánh nào của fault tree) + hạn | |
-| Nếu Dừng: bài học ghi lại | |
-| Ngày quyết định lại (trừ khi Dừng) | |
-| PIC ký | |
+| Commit ký tiêu chí | `bd85014` như v1; hash tiêu chí `2dd63f18220d` |
+| Hash chốt cổng vòng 1 | `fa385c26` như v1 |
+| Mã lần chạy dùng làm bằng chứng | S4 base `R-S4-before-20261119-114851-098f5a` · prepared `R-S4-prepared-20261119-114851-098f5a` · after `R-S4-after-20261119-114851-098f5a` |
+| Còn dòng "vượt trần" nào trong report? (hàng chờ, chi phí, ROI, trần tiền, pháp lý) | After: không có dòng vượt trần vận hành/kinh doanh; nhưng grade tổng thể FAIL integrity do thiếu 28 file thẻ ngoài S4. |
+| Kho hoặc hãng có số xấu nhất: ____. Nếu chỉ nhìn phân khúc này, quyết định có đổi không? *(Khối "theo kho và hãng" trong output `lab10.eval` / `lab10.grade`, hoặc mục `by_segment` trong `report.json`.)* | S4 after kho HN tốn 5.337đ/ticket, cao nhất trong hai kho đang chạy, vẫn dưới 7.000đ; HN/HCM đều pass 1,0, ba chỉ số an toàn bằng 0. Chỉ nhìn HN không đổi đề xuất. DN/CT không được đo after. |
+| Quyết định (khoanh một) | **Đề xuất Tiếp tục trong phạm vi HN/HCM; CHƯA CHỐT/KÝ** cho tới khi xử lý integrity và chạy lại grade. |
+| Bằng chứng 1: mã lần chạy + chỉ số bắt buộc nào đạt / chưa | S4 after: pass_rate 1,0 ≥ 0,97; pass_k 1,0 ≥ 0,9; hoàn sai, lỗi hãng oan, lộ PII đều 0. |
+| Bằng chứng 2 | S4 after: chi phí 5.747đ ≤ 7.000đ, ROI 0,74 ≥ 0,3, 0 ca ùn ≤ 1; hoàn tự động cao nhất 292.000đ ≤ 300.000đ. |
+| Bằng chứng 3 | Bộ nền after `R-base-after-20261119-114721-098f5a`: pass_rate/pass_k 1,0; grade báo không có ca mới hỏng trong phép kiểm; 13 tests public đạt. Phạm vi S4 56,1%. |
+| Khớp dòng nào trong `decision_rule` đã ký? | Các chỉ số trên bộ nền và S4 khớp điều kiện số của dòng **Tiếp tục**; điều kiện integrity tổng thể chưa đạt, vì vậy đây chỉ là đề xuất chờ kiểm lại. |
+| Nếu Thu hẹp: cắt kho nào / còn bao nhiêu phần trăm / mấy người trực, và ticket bị cắt đi đâu | Không đề xuất thu hẹp thêm; giữ giới hạn vòng 1 HN/HCM, S4 56,1%, 1 người trực; DN/CT làm tay. |
+| Nếu Cải tiến thêm: giả thuyết cụ thể (nhánh nào của fault tree) + hạn | Không chọn theo dòng quyết định đã ký; trước khi ký v2 cần khắc phục integrity và kiểm nhánh PM4, hạn dự kiến 30/11/2026. |
+| Nếu Dừng: bài học ghi lại | Không chọn. |
+| Ngày quyết định lại (trừ khi Dừng) | 30/11/2026 hoặc ngay khi có đủ bằng chứng integrity. |
+| PIC ký | Lưu Thanh Mỹ — **chờ ký**, chưa ghi nhận đồng thuận của bàn. |
 
 **Chỉ ở v2**
-- Quyết định đổi hay giữ so với v1? Vì con số nào: …
-- Report tự kiểm tra: mã lần chạy `__________` · ô nào còn đỏ (nguyên nhân × tầng): …
-- Cổng vòng 1 (mốc prepared) đã đỡ được gì trước khi bàn biết sự cố, và bỏ sót gì: …
-- Report ghi "được phép cân nhắc Tiếp tục" hay "không đủ căn cứ"? Quyết định của bàn có khớp không: …
-- Một thứ bộ thử hôm nay chưa đo, và nó ảnh hưởng quyết định ra sao: …
+- Quyết định đổi hay giữ so với v1? Đề xuất giữ **Tiếp tục** ở cùng phạm vi vì S4 after 0 thiệt hại đo được, pass_rate 1,0, ROI 0,74 và 0 ùn; chưa ký vì integrity FAIL.
+- Report tự kiểm tra: `R-S4-grade-20261119-114850-098f5a` · đỏ: integrity, thiếu 28 file S1–S3 và S5–S8 theo manifest; visible, regression, criteria, monitor xanh; hidden chưa có.
+- Cổng vòng 1 (mốc prepared) đã đỡ được gì trước khi bàn biết sự cố, và bỏ sót gì: S4 trong phạm vi hoàn sai 160.000đ → 0, lỗi hãng oan 27 → 0; trần config vẫn 500.000đ, cao hơn hạn mức sale 300.000đ; không đo DN/CT after.
+- Report ghi "được phép cân nhắc Tiếp tục" về các chỉ số; đề xuất khớp điều kiện số, nhưng grade tổng thể FAIL nên chưa chốt.
+- Một thứ bộ thử hôm nay chưa đo, và nó ảnh hưởng quyết định ra sao: ghi hoàn đồng thời và tải người duyệt thực tế; chưa mở rộng pilot trước khi kiểm tính nguyên tử và SLA/chi phí thực.
 
 **Ba dòng bắt buộc** (chép nguyên ba câu này sang `submission/submission.json`, mục `three_lines`)
-1. Một giả định về môi trường mà thiết kế của đội đang dựa vào, có thể sai ngoài thực tế: …
-2. Gate của đội chỉ GIẢM khả năng hay thực sự NGĂN được tác hại? Vì sao: …
-3. Vì data là mock, cần đo lại gì trong pilot thật trước Bước đánh giá 2: …
+1. Một giả định về môi trường mà thiết kế của đội đang dựa vào, có thể sai ngoài thực tế: Tracking và ngân sách Finance luôn chính xác, cập nhật kịp thời và mọi lệnh ghi đều đi qua gate.
+2. Gate của đội chỉ GIẢM khả năng hay thực sự NGĂN được tác hại? Vì sao: Gate ngăn khoản hoàn tự động vượt ngân sách trong mô phỏng tuần tự khi sổ và ngân sách đúng, nhưng chỉ giảm rủi ro tổng thể vì dữ liệu sai, duyệt tay hoặc ghi đồng thời chưa được bảo đảm.
+3. Vì data là mock, cần đo lại gì trong pilot thật trước Bước đánh giá 2: Đo tỷ lệ 429/fail_open, lỗi hãng oan, tiền hoàn sai, SLA hàng chờ, chi phí/ROI và tính nguyên tử của trần theo ngày trên dữ liệu và tải thực.
