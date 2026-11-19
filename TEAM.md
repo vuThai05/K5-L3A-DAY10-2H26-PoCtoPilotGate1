@@ -118,4 +118,5 @@ Vai: Sản phẩm và kinh doanh. `config/acceptance_criteria.json`, `config/ope
 
 ### Exit ticket
 
-*(Hạnh tự viết: một điều học được trong buổi, một điều còn chưa chắc — không điền hộ.)*
+- **Điều học được:** Ngưỡng kinh doanh phải soát lại theo bối cảnh thật, không chỉ "đạt là xong". Trần hoàn 500.000đ mình đặt ở vòng 1 vẫn cho kết quả đạt trên thẻ S4, nhưng chỉ do may (292.000đ), vì ngày sale 11.11 Finance chốt riêng 300.000đ. Thêm nữa, khi LLM lỗi thì hệ thống phải rơi về trạng thái an toàn là chuyển cho người duyệt, không được tự ghi tiền hay ghi lỗi hãng (spec câu 3.2).
+- **Điều còn chưa chắc:** Phạm vi pilot HN/HCM đang thật sự an toàn hay chỉ né được lỗi nhờ phạm vi hẹp. Ca hỏng S4-08 nằm ở kho DN, ngoài phạm vi, nên mình chưa chắc khi mở rộng sang DN/CT (sau REFUND-v4) thì các cổng hiện tại còn đủ không.
