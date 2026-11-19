@@ -51,7 +51,9 @@ Vai: Vận hành và pháp lý (kiêm trưởng nhóm). `config/operating_gates.
 
 ### Exit ticket
 
-*(Mỹ tự viết: một điều học được trong buổi, một điều còn chưa chắc — không điền hộ.)*
+**Điều học được:** Quan trọng nhất không nằm ở việc viết đúng một dòng cổng hay một con số ngưỡng, mà ở cách cả bàn phối hợp để mỗi quyết định đều có bằng chứng và có người chịu trách nhiệm. Từ việc chốt tiêu chí, chạy ba mốc base/prepared/after, tới lúc xử lý sự cố S4, cái khó nhất không phải kỹ thuật mà là tìm được người cùng làm, chia đúng phần việc và sắp xếp thời gian để các phần ráp lại được với nhau mà không chồng chéo hay bỏ sót.
+
+**Điều còn chưa chắc:** Guard đã kiểm chứng được trong phạm vi pilot (HN/HCM), nhưng chưa rõ nó có còn đúng khi mở rộng sang kho khác hoặc khi tải thật khác xa dữ liệu mock — đây là rủi ro bàn ghi lại để kiểm tiếp trước khi quyết định mở rộng.
 
 ## VuQuangThai-2A202603545
 
