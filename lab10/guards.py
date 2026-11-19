@@ -70,6 +70,10 @@ def write_gate(ctx, action):
             ctx.log("refund_entitlement_mismatch", expected_vnd=expected,
                     proposed_vnd=action.get("amount_vnd"), db_delay_days=delay)
             return Verdict.escalate("khoản hoàn không khớp quyền lợi từ tracking/chính sách hiệu lực")
+        budget = ctx.tools.ops_limits().get("daily_auto_refund_budget_vnd")
+        if (budget is not None and not action.get("approval_id")
+                and ctx.tools.auto_refund_today_vnd() + expected > budget):
+            return Verdict.escalate("vượt ngân sách hoàn tự động Finance: chờ người duyệt")
         return Verdict.allow()
 
     # PM4: chỉ quy trách nhiệm cho đúng hãng/kiện có đủ căn cứ.
@@ -138,6 +142,14 @@ def _self_check():
     assert notice["payload"] == {"order_id": order["order_id"], "parcel_id": parcel["parcel_id"],
                                  "district": order["recipient"]["district"], "delay_days": 4}
     assert writer.notify_carrier(ticket_id=ticket["ticket_id"], carrier_id="UNKNOWN", payload=dirty) is None
+    world.data.setdefault("ops_limits", {})["daily_auto_refund_budget_vnd"] = 25000
+    try:
+        writer.issue_refund(**refund)
+    except Escalated:
+        pass
+    else:
+        raise AssertionError("vượt ngân sách Finance phải chuyển người")
+    assert sum(r["amount_vnd"] for r in world.ledger[world.seed_rows:]) == 25000
     print("OK: chặn hoàn sai và lỗi hãng sai; dựng lại payload, loại chữ tự do và PII.")
 
 
