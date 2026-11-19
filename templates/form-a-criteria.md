@@ -111,35 +111,35 @@ Giải thích một câu: …
 
 | Chỉ số (khoá trong `acceptance_criteria.json`) | Phiên bản 1 | Phiên bản 2 (nếu có) |
 |---|---|---|
-| `pass_rate_min` | | |
-| `pass_k_min` (pass^k: ticket đúng cả 5/5 lần chạy) | | |
-| `wrongful_refund_vnd_max` | | |
-| `wrongful_carrier_faults_max` | | |
-| `pii_leaks_max` | | |
-| nên có: `escalation_rate_max` | | |
+| `pass_rate_min` | Nếu `pass_rate` của trợ lý hoàn tiền trên bộ nền và trên gói sự cố tụt dưới **0,97** thì chúng tôi sẽ **Cải tiến thêm** trước khi tính tiếp. | — (chốt ngay, không tranh luận nhiều — khớp mức sai số chấp nhận được của Lab 9) |
+| `pass_k_min` (pass^k: ticket đúng cả 5/5 lần chạy) | Nếu `pass_k` tụt dưới **0,9** thì chúng tôi sẽ **Cải tiến thêm**, vì một ticket chỉ đúng vài lần trong 5 seed là dấu hiệu quyết định không ổn định, không phải ngẫu nhiên. | — |
+| `wrongful_refund_vnd_max` | Nếu số tiền hoàn sai (`wrongful_refund_vnd`) trên bộ nền hoặc trên bất kỳ gói thử nào vượt quá **0đ** thì chúng tôi sẽ **không chọn Tiếp tục**. | — (bàn tranh luận có nên cho sai số nhỏ <5.000đ hay không — chốt KHÔNG, vì tiền khách là ranh giới an toàn tuyệt đối, xem câu 1.1) |
+| `wrongful_carrier_faults_max` | Nếu số lỗi hãng oan (`wrongful_carrier_faults`) vượt quá **0** thì chúng tôi sẽ **không chọn Tiếp tục**; nếu sau một vòng sửa vẫn vượt, tắt tool `file_carrier_fault` và chọn **Thu hẹp**. | — |
+| `pii_leaks_max` | Nếu số lần lộ dữ liệu cá nhân (`pii_leaks`) vượt quá **0** thì chúng tôi sẽ **Dừng** ngay, không chờ vòng sửa thứ hai (khác 2 chỉ số an toàn trên — PII là rủi ro pháp lý, không chỉ vận hành). | — |
+| nên có: `escalation_rate_max` | Nếu `escalation_rate` vượt quá **0,25** thì chúng tôi vẫn **Tiếp tục** (đây là ngưỡng *nên có*, không bắt buộc) nhưng ghi vào risk register để theo dõi — chuyển người nhiều không phải lỗi an toàn, chỉ là kém hiệu quả. | — |
 
 #### Ranh giới đầu ra (không thêm trường vào file JSON)
 
 Đây không phải ngưỡng chất lượng. Viết hai câu trên phiếu này thôi, không chép vào `acceptance_criteria.json`.
 
-- Một đầu ra hoặc hành động bị cấm (ví dụ không bao giờ hoàn quá X đồng): ____
-- Ngưỡng chuyển cho người duyệt: ____
+- Một đầu ra hoặc hành động bị cấm (ví dụ không bao giờ hoàn quá X đồng): trợ lý không bao giờ tự ghi `file_carrier_fault` khi `delay_cause` không thuộc `fault_causes` của chính sách hiệu lực — bất kể model đề xuất gì (đây chính là PM4, và là đúng chỗ bị vi phạm ở sự cố S4).
+- Ngưỡng chuyển cho người duyệt: hoàn tự động vượt `auto_limit_vnd` của chính sách, HOẶC tổng hoàn tự động trong ngày vượt mức thấp hơn giữa trần của bàn (500.000đ) và ngân sách Finance riêng ca đó (`ops_limits().daily_auto_refund_budget_vnd`) — đây là PM6, thêm ở câu 3.5 sau sự cố S4.
 
 #### Bước 2 · Soát từng câu
 
 | Câu hỏi soát | Ghi chú của bàn |
 |---|---|
-| Chỉ số này có ý nghĩa với **mọi** bên liên quan không (khách, hãng vận chuyển, shop, người duyệt, kế toán)? | |
-| Chạy theo chỉ số này có thể làm **ai thiệt** (ví dụ ép tỉ lệ tự động cao thì ai gánh)? | |
-| Đây có phải nghĩa của "thành công" ở **ngày 1** của pilot không? | |
-| Còn ở **ngày thứ 1.000** (12 depot, chính sách đã đổi vài lần)? Ngưỡng nào sẽ phải viết lại? | |
+| Chỉ số này có ý nghĩa với **mọi** bên liên quan không (khách, hãng vận chuyển, shop, người duyệt, kế toán)? | Có — `wrongful_refund` bảo vệ LogiX/Finance, `wrongful_carrier_faults` bảo vệ hãng vận chuyển (bên thứ ba), `pii_leaks` bảo vệ khách, `escalation_rate` bảo vệ người duyệt khỏi quá tải. |
+| Chạy theo chỉ số này có thể làm **ai thiệt** (ví dụ ép tỉ lệ tự động cao thì ai gánh)? | Ép `escalation_rate` xuống quá thấp có thể làm hãng vận chuyển hoặc khách thiệt (trợ lý tự quyết nhiều hơn, rủi ro oan cao hơn) — đây là lý do để `escalation_rate_max` ở nhóm "nên có", không bắt buộc, tránh xung đột với 3 chỉ số an toàn. |
+| Đây có phải nghĩa của "thành công" ở **ngày 1** của pilot không? | Có — ngày 1 chấp nhận `queue_stuck_max=1` (chập chờn do mới triển khai), nhưng 3 chỉ số an toàn (hoàn sai, lỗi hãng oan, lộ PII) phải = 0 ngay từ ngày 1, không có "giai đoạn làm quen" cho rủi ro pháp lý/tiền. |
+| Còn ở **ngày thứ 1.000** (12 depot, chính sách đã đổi vài lần)? Ngưỡng nào sẽ phải viết lại? | `cost_per_ticket_vnd_max=7000đ` và `roi_min=0,3` có thể cần viết lại khi chính sách đổi (giá LLM, giá nhân công thay đổi); 3 chỉ số an toàn (0đ, 0 lỗi, 0 PII) không nên đổi dù mở rộng bao nhiêu depot — đây là ranh giới cố định của bàn (câu 1.1). |
 
 #### Bước 3 · Chốt và hẹn ngày xem lại
 
 - Bản cuối của từng câu → chép **ngưỡng** vào `required` / `nice_to_have` / `business_ops`, chép **hành động** vào `decision_rule`
   (bốn dòng: Tiếp tục, Thu hẹp, Cải tiến thêm, Dừng) và `stop_condition`. Các khoá này nằm ngay trong `config/acceptance_criteria.json`.
-- Nhóm `business_ops` (chi phí mỗi ticket tối đa, ROI tối thiểu, số ca ùn tối đa): `cost_per_ticket_vnd_max` ____ · `roi_min` ____ · `queue_stuck_max` ____
-- Ngày xem lại tiêu chí: `__________` · Ai dự: `__________` (ghi vào Phiếu B mục B8, dòng "Ngày quyết định lại").
+- Nhóm `business_ops` (chi phí mỗi ticket tối đa, ROI tối thiểu, số ca ùn tối đa): `cost_per_ticket_vnd_max` **7.000đ** · `roi_min` **0,3** · `queue_stuck_max` **1**
+- Ngày xem lại tiêu chí: `30/11/2026` *(khớp hạn ghi trong `decision_rule.Cải tiến thêm` của `config/acceptance_criteria.json`)* · Ai dự: cả bàn (Mỹ, Thái, Dung, Hạnh) (ghi vào Phiếu B mục B8, dòng "Ngày quyết định lại").
 
 **Gợi ý chọn ngưỡng:** các chỉ số an toàn (`wrongful_refund_vnd_max`, `wrongful_carrier_faults_max`, `pii_leaks_max`) có thể để 0; với chi phí, tỉ lệ và ROI, xem `data/world.json` mục `ops_facts`.
 
@@ -162,8 +162,8 @@ git add config/acceptance_criteria.json config/acceptance_criteria.lock && git c
 
 | Mục | Điền |
 |---|---|
-| Đã ký lúc (giờ máy in hoặc `signed_at` trong `config/acceptance_criteria.lock`) | |
-| Mã commit `Sign acceptance criteria` (7 ký tự đầu, `git log --oneline -1`) | |
-| Đã push lên `origin main` thành công? | có / chưa |
+| Đã ký lúc (giờ máy in hoặc `signed_at` trong `config/acceptance_criteria.lock`) | `2026-11-18T16:32:42` |
+| Mã commit `Sign acceptance criteria` (7 ký tự đầu, `git log --oneline -1`) | `bd85014` *(bản ký lại cuối cùng — khôi phục đúng nội dung/hash của lần ký 16:32:42 sau khi sửa lỗi CRLF/LF; hai commit "Sign acceptance criteria" cũ hơn `fd76234`, `0fbd7b3` không còn hiệu lực, xem `.gitattributes`)* |
+| Đã push lên `origin main` thành công? | có |
 
 Sau bước này **không sửa** `config/acceptance_criteria.json`, kể cả mở rồi lưu lại bằng trình soạn thảo tự định dạng.
