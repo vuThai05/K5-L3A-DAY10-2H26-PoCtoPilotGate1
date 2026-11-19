@@ -365,13 +365,14 @@ Vẽ lại cây ở C6. Ở mỗi nhánh đã xử lý, thêm một nút `VÀ [g
 ```
 [ĐỈNH] Hãng bị ghi oan lỗi giao trễ
  └─ VÀ: quyết định quy lỗi sai (ví dụ fail_open) VÀ PM4/cổng pháp lý không chặn được lệnh ghi
-        ├─ Đầu vào tracking/chính sách sai hoặc thiếu; hoặc đường ghi không qua gate [còn hở]
-        └─ Monitor phát hiện sau ghi, không chặn việc ghi [còn hở]
+        └─ Đầu vào tracking/chính sách sai hoặc thiếu; hoặc đường ghi không qua gate [còn hở]
 
 [ĐỈNH RIÊNG] Tổng hoàn tự động vượt ngân sách Finance trong ngày
  └─ VÀ: khoản hoàn làm vượt hạn mức VÀ guard ngân sách/config không chặn
         └─ Sổ/ngân sách sai hoặc ghi đồng thời ngoài giả định mô phỏng tuần tự [còn hở]
 ```
+
+Monitor `fail_open_carrier_fault_rate` là lớp phát hiện sau ghi, không phải nguyên nhân trực tiếp của việc ghi oan và không chặn được lệnh ghi.
 
 | Nhánh | Gate (hàm trong `guards.py` / khoá config / metric trong `monitors.py`) | Tầng gate (phát hiện / chặn / giới hạn thiệt hại / vận hành) | Giảm hay ngăn? Vì sao | Nhánh còn hở |
 |---|---|---|---|---|
@@ -405,7 +406,7 @@ Ghi các dòng đổi sau sự cố. Mỗi dòng vẫn phải có một PIC có 
 
 | # nhóm | Trạng thái mới (Xong / Chưa / Không áp dụng) | Bằng chứng mới (mã lần chạy, mục phiếu, số trong report) | PIC |
 |---|---|---|---|
-| 4 Quyền hạn | Xong trong phạm vi mô phỏng | PM1/PM4 và kiểm ngân sách `write_gate`; after S4 0 hoàn sai, 0 lỗi hãng oan | Nguyễn Thị Thùy Dung |
+| 4 Quyền hạn | Xong | PM1/PM4 và kiểm ngân sách `write_gate`; after S4 0 hoàn sai, 0 lỗi hãng oan trong phạm vi mô phỏng | Nguyễn Thị Thùy Dung |
 | 5 Hiệu năng, hạ tầng | Chưa | S4 after chờ tối đa 40 phút, 0 ùn; chưa đo tải và năng lực người thật | Vũ Quang Thái |
 | 6 Kinh doanh | Chưa | Trần 300.000đ; after chi phí 5.747đ, ROI 0,74; cần xác nhận ngân sách sale thực tế | Nguyễn Thị Hồng Hạnh |
 | 8 Con người, pháp lý | Chưa | After 0 PII/0 lỗi hãng oan trên tập thử; chưa đối soát bên thứ ba thật | Lưu Thanh Mỹ |
@@ -458,10 +459,11 @@ Cột v1 nằm ở Phiếu B mục B8; không sửa cột đó.
 | PIC ký | Lưu Thanh Mỹ, cả bàn đồng thuận (Thái, Dung, Hạnh đã vote trên PR #35, 19/11/2026). |
 
 **Chỉ ở v2**
-- Quyết định đổi hay giữ so với v1? Đề xuất giữ **Tiếp tục** ở cùng phạm vi vì S4 after 0 thiệt hại đo được, pass_rate 1,0, ROI 0,74 và 0 ùn; chưa ký vì integrity FAIL.
+- Quyết định đổi hay giữ so với v1? Bàn giữ **Tiếp tục** trong phạm vi HN/HCM vì S4 after có 0 thiệt hại đo được, pass_rate 1,0, ROI 0,74 và 0 ùn. Báo Lab Coach để xác nhận và xử lý integrity FAIL trước khi nộp.
 - Report tự kiểm tra: `R-S4-grade-20261119-122857-f0e98f` · đỏ: integrity, thiếu 28 file S1–S3 và S5–S8 theo manifest — nguyên nhân nghi ngờ (CHƯA xác nhận với Lab Coach, chỉ là suy luận từ bằng chứng gián tiếp của đội): lab code đổi version, thẻ S4 phát qua cách khác (không qua pull upstream toàn bộ 8 thẻ); visible, regression, criteria, monitor xanh; hidden chưa có.
+- Kiểm thứ tự ký: `check_submission` cảnh báo lần eval đầu `2026-11-18T16:39:35` trước commit `Sign acceptance criteria` hiện được nhận diện lúc `23:22:02`; `signed_at` là `16:32:42`. Cần Lab Coach/team chấm kiểm tra lịch sử ký và đánh giá điều kiện ký trước khi đo; chưa coi cảnh báo là đã giải quyết.
 - Cổng vòng 1 (mốc prepared) đã đỡ được gì trước khi bàn biết sự cố, và bỏ sót gì: S4 trong phạm vi hoàn sai 160.000đ → 0, lỗi hãng oan 27 → 0; trần config vẫn 500.000đ, cao hơn hạn mức sale 300.000đ; không đo DN/CT after.
-- Report ghi "được phép cân nhắc Tiếp tục" về các chỉ số; đề xuất khớp điều kiện số, nhưng grade tổng thể FAIL nên chưa chốt.
+- Report ghi "được phép cân nhắc Tiếp tục" về các chỉ số; quyết định khớp điều kiện số đã ký. Grade tổng thể vẫn FAIL integrity, cần xác nhận với Lab Coach trước khi nộp.
 - Một thứ bộ thử hôm nay chưa đo, và nó ảnh hưởng quyết định ra sao: ghi hoàn đồng thời và tải người duyệt thực tế; chưa mở rộng pilot trước khi kiểm tính nguyên tử và SLA/chi phí thực.
 
 **Ba dòng bắt buộc** (chép nguyên ba câu này sang `submission/submission.json`, mục `three_lines`)

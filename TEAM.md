@@ -68,7 +68,7 @@ Vai: Kỹ sư cổng. `lab10/guards.py`, `lab10/monitors.py`; Phiếu A câu 1.3
 - Câu 2.6: Viết ba cổng PM1/PM4/PM5 trong `lab10/guards.py`, đọc kết quả eval/trace, kiểm hồi quy và ghi B7.1 cùng B0 dòng 2. Code tính lại quyền lợi trước hoàn tiền, kiểm căn cứ ghi lỗi hãng và dựng payload gửi hãng từ dữ kiện được phép; không xử lý riêng theo mã ticket hay seed.
 
 - Câu 2.1, 2.2: chạy mốc base, trace `T-002@55`, bảng soát lỗi (PR #20).
-- Vòng 2 (thẻ S4): review PR #32 ba lượt rất kỹ, bắt đúng nhiều điểm sai số liệu/logic (mẫu số bộ nền, mã lần chạy lệch, quan hệ HOẶC/VÀ sai ở fault tree, monitor không khớp code) trước khi đồng ý merge. Sau đó tự làm câu 3.5 + C7, C9–C12 (PR #33): thêm PM6 vào `write_gate` (chặn trần hoàn tự động theo ngày, đọc động `ops_limits()`), chạy lại S4 + regression, điền fault tree sau sửa, risk register, checklist/runbook, và nêu rõ quyết định v2 là **đề xuất Tiếp tục, CHƯA CHỐT/KÝ** vì phát hiện `lab10.grade` báo FAIL mục `integrity`.
+- Vòng 2 (thẻ S4): review PR #32 ba lượt, đối chiếu số liệu, mã lần chạy, fault tree và monitor. Làm câu 3.5 + C7, C9–C12 (PR #33): thêm cổng kiểm ngân sách Finance, chạy S4 và regression, điền fault tree, risk register và runbook. Sau khi cả bàn chọn v2 **Tiếp tục** trong HN/HCM, cập nhật Phiếu C nhất quán và ghi rõ `integrity` vẫn FAIL, cần Lab Coach xác nhận trước khi nộp.
 
 ### Bằng chứng
 
@@ -80,7 +80,9 @@ Vai: Kỹ sư cổng. `lab10/guards.py`, `lab10/monitors.py`; Phiếu A câu 1.3
 
 ### Exit ticket
 
-*(Thái tự viết: một điều học được trong buổi, một điều còn chưa chắc — không điền hộ.)*
+**Điều học được:** Cần đối chiếu guard với trace và report theo từng mốc, vì kết quả đạt trên phạm vi pilot không tự chứng minh các ticket ngoài phạm vi an toàn. Khi lập fault tree, cần phân biệt lớp chặn với monitor chỉ phát hiện sau khi ghi.
+
+**Điều còn chưa chắc:** Grade vẫn FAIL integrity vì thiếu 28 file thẻ trong manifest; cần Lab Coach xác nhận nguồn file và chạy lại trước khi nộp. Tôi cũng muốn kiểm lại trần hoàn khi có các lệnh ghi đồng thời và đo tải người duyệt ngoài dữ liệu mock.
 
 ## NguyenThiThuyDung-2A202603552
 

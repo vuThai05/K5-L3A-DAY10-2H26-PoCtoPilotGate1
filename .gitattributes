@@ -20,4 +20,4 @@ config/acceptance_criteria.lock -text
 # đổi LF<->CRLF lúc git add/checkout và làm hash lệch (phát hiện thêm trên checkout
 # sạch: submission/code/guards.py, monitors.py cũng lệch, không chỉ các file khoá;
 # góp ý Thái + Dung, PR #35).
-submission/** -text
+submission/** -text whitespace=cr-at-eol
